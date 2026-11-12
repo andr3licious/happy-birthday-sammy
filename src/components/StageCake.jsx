@@ -178,7 +178,7 @@ export function StageCake({ status, onContinue }) {
           type="button"
           {...continueTapProps}
         >
-          Open Your Scrapbook <span className="emoji">✨</span>
+          Turn the Page <span className="emoji">✨</span>
         </button>
       </div>
     </section>
