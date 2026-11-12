@@ -571,10 +571,10 @@ h1, h2, h3, p { margin: 0; }
 .cake-pop-heart.h-right { right: 10px; top: 42%; animation-delay: -1.4s; }
 
 .cake-topper-3d {
-  position: relative;
+  position: absolute;
   z-index: 5;
-  margin-top: -12px;
-  margin-bottom: -12px;
+  top: calc(var(--cake-w) * 0.24 - 13px);
+  left: 50%;
   padding: 2px 12px;
   border-radius: 999px;
   background: linear-gradient(120deg, #fff8de, #ffe0ec);
@@ -583,10 +583,11 @@ h1, h2, h3, p { margin: 0; }
   font-size: 0.98rem;
   font-weight: 700;
   color: #8c4a27;
+  white-space: nowrap;
   box-shadow:
     0 4px 10px rgba(145, 65, 100, 0.22),
     0 0 0 2px rgba(255, 255, 255, 0.85) inset;
-  transform: translateZ(18px);
+  transform: translateX(-50%) translateZ(18px);
 }
 .tier-cap-3d {
   position: absolute;
@@ -794,6 +795,7 @@ h1, h2, h3, p { margin: 0; }
   z-index: 2;
   width: 64%;
   height: calc(var(--cake-w) * 0.24);
+  border-radius: 16px 16px 2px 2px;
   background: linear-gradient(180deg, #ffc4dd 0%, #f48fb8 100%);
 }
 .tier-top::after {
@@ -809,7 +811,7 @@ h1, h2, h3, p { margin: 0; }
   z-index: 1;
   width: 100%;
   height: calc(var(--cake-w) * 0.33);
-  margin-top: -2px;
+  margin-top: -3px;
   background: linear-gradient(180deg, #e5d4ff 0%, #b794f6 100%);
 }
 .tier-bottom::before {
