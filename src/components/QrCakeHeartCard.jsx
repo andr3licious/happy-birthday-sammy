@@ -592,6 +592,7 @@ export function QrCakeHeartCard() {
             <p className="liner-text">
               {(CONFIG.qr && CONFIG.qr.secretMessage) || qrPayload}
             </p>
+            <p className="qr-secret-signoff">- {CONFIG.from} ✨</p>
           </div>
         </div>
       )}

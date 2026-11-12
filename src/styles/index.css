@@ -2089,6 +2089,13 @@ h1, h2, h3, p { margin: 0; }
 }
 .modal-close:hover { background: #ffd8e8; }
 .liner-text { color: var(--muted); white-space: pre-line; font-weight: 500; }
+.qr-secret-signoff {
+  margin-top: 0.75rem;
+  font-family: var(--font-hand);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+}
 
 /* =====================================================================
    Full-Site Interactive 3D Pop-Up Birthday Card Book

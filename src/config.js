@@ -92,6 +92,6 @@ Amping always, Sammy!
     /* Live GitHub Pages URL encoded into the Birthday Cake & Heart QR code */
     url: 'https://andr3licious.github.io/happy-birthday-sammy/',
     secretMessage:
-      'Oych Sammy, you found the hidden note diaych! 🎂💖 Wishing our future RN the happiest birthday and the brightest year ahead. Amping always, Sam!\n\n- Andre ✨',
+      'Oych Sammy, you found the hidden note diaych! 🎂💖 Wishing our future RN the happiest birthday and the brightest year ahead. Amping always, Sam!',
   },
 };
