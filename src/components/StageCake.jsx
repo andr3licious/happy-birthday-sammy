@@ -135,7 +135,6 @@ export function StageCake({ status, onContinue }) {
           </button>
 
           <div className="cake cake-is-3d" aria-hidden="true">
-            <div className="cake-topper-3d">{CONFIG.name} 👑</div>
             <div className="tier tier-top">
               <span className="tier-cap-3d" />
               <span className="frosting" />
@@ -143,6 +142,7 @@ export function StageCake({ status, onContinue }) {
                 <i /><i /><i /><i />
               </span>
             </div>
+            <div className="cake-topper-3d">{CONFIG.name} 👑</div>
             <div className="tier tier-bottom">
               <span className="tier-cap-3d" />
               <span className="frosting" />

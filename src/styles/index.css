@@ -571,16 +571,21 @@ h1, h2, h3, p { margin: 0; }
 .cake-pop-heart.h-right { right: 10px; top: 42%; animation-delay: -1.4s; }
 
 .cake-topper-3d {
-  margin-bottom: 4px;
-  padding: 2px 10px;
+  position: relative;
+  z-index: 5;
+  margin-top: -12px;
+  margin-bottom: -12px;
+  padding: 2px 12px;
   border-radius: 999px;
-  background: linear-gradient(120deg, #fff6d6, #ffd9e8);
-  border: 1px solid rgba(212, 148, 64, 0.48);
+  background: linear-gradient(120deg, #fff8de, #ffe0ec);
+  border: 1.5px solid rgba(212, 148, 64, 0.55);
   font-family: var(--font-hand);
   font-size: 0.98rem;
   font-weight: 700;
   color: #8c4a27;
-  box-shadow: 0 4px 10px rgba(175, 95, 125, 0.18);
+  box-shadow:
+    0 4px 10px rgba(145, 65, 100, 0.22),
+    0 0 0 2px rgba(255, 255, 255, 0.85) inset;
   transform: translateZ(18px);
 }
 .tier-cap-3d {
