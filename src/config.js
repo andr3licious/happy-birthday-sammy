@@ -37,7 +37,7 @@ export const CONFIG = {
   /* INSERT VOUCHER PRIZE HERE */
   voucher: {
     prize: 'Birthday Treat (Ice Cream, Cake, Coffee, Fries, or any Food) on Me 🍨🍟',
-    fine: 'No expiry · Claim anytime · Future RN privilege 🩺✨',
+    fine: 'No expiry · Claim anytime · Future RN 🩺✨',
   },
 
   /* INSERT MEMORY IMAGES HERE
@@ -48,7 +48,7 @@ export const CONFIG = {
       id: 'snap-1',
       src: 'assets/images/IMG_20260901_230952_379.jpg',
       caption: 'prettiest ✨',
-      back: 'Pretty kaayo uy 🌸 happy birthday, Sammy!',
+      back: 'Pretty kaayo oych 🌸 happy birthday, Sammy!',
       date: 'snap 01',
       tilt: '-3deg',
       pin: '#ff7fb5',

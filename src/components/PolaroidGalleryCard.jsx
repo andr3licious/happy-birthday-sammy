@@ -149,14 +149,19 @@ export function PolaroidGalleryCard() {
             className="polaroid-lightbox-card"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              type="button"
-              className="lightbox-close"
-              onClick={handleCloseZoom}
-              aria-label="Close photo view"
-            >
-              ✕
-            </button>
+            <div className="lightbox-header">
+              <span className="lightbox-tag">
+                ✿ {activeMemory.date || `Snap 0${zoomIdx + 1}`}
+              </span>
+              <button
+                type="button"
+                className="lightbox-close"
+                onClick={handleCloseZoom}
+                aria-label="Close photo view"
+              >
+                ✕
+              </button>
+            </div>
 
             <div
               className={`lightbox-polaroid ${zoomFlipped ? 'is-flipped' : ''}`}
