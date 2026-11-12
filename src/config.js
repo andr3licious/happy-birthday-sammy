@@ -27,7 +27,7 @@ export const CONFIG = {
 
     /* INSERT WHY YOU CHOSE THE SONG HERE */
     linerNotes:
-      "Had to put this song on here for you. Hope it gets stuck in your head today. Happy birthday! 🎶",
+      'Had to put this song on here for you, Sammy. Hope it gets stuck in your head today and makes you smile. Happy birthday! 🎶✨',
 
     /* Shown on the player only if the song file can't be loaded */
     fallbackTitle: 'Stardust Lullaby',
@@ -36,8 +36,8 @@ export const CONFIG = {
 
   /* INSERT VOUCHER PRIZE HERE */
   voucher: {
-    prize: '1 Sweet Dessert Date (Ice Cream, Cake, or Whatever You Crave!) on Me 🍨🍰',
-    fine: 'No expiry · Redeemable anytime · You pick the place 😉',
+    prize: '1 Birthday Treat (Ice Cream, Cake, or Coffee) on Me 🍨🍰',
+    fine: 'No expiry · Claim anytime · Future RN privilege 🩺✨',
   },
 
   /* INSERT MEMORY IMAGES HERE
@@ -48,16 +48,16 @@ export const CONFIG = {
       id: 'snap-1',
       src: 'assets/images/IMG_20260901_230952_379.jpg',
       caption: 'prettiest ✨',
-      back: 'Still one of my favorite photos of you 🌸',
+      back: 'Pretty kaayo uy 🌸 happy birthday, Sammy!',
       date: 'snap 01',
-      tilt: '-3.5deg',
+      tilt: '-3deg',
       pin: '#ff7fb5',
     },
     {
       id: 'snap-2',
       src: 'assets/images/IMG_20260901_233255_746.jpg',
       caption: 'golden hour 💛',
-      back: 'Golden hour really suits you ✨',
+      back: 'Golden hour really suits you, Sam ✨',
       date: 'snap 02',
       tilt: '2.5deg',
       pin: '#b18cff',
@@ -66,26 +66,25 @@ export const CONFIG = {
       id: 'snap-3',
       src: 'assets/images/IMG_20260902_003828_384.jpg',
       caption: 'goofy side 🥸',
-      back: 'Had to include this one too 😂 never change',
+      back: 'Top-tier goofy side 😂 never lose this energy!',
       date: 'snap 03',
-      tilt: '-3deg',
+      tilt: '-2.5deg',
       pin: '#7fd4ff',
     },
   ],
 
   /* INSERT LETTER HERE (line breaks are kept exactly as written) */
-  letter: `Hey Sam,
+  letter: `Oych Sammy,
 
-Happy birthday! 🎂
+Happy birthday! 🎂✨
 
-It’s funny how we’ve only been talking for about two months, because talking to you is already my favorite part of the day. Whether you’re being goofy or just telling me about random stuff, you always make me smile.
+Crazy how it’s already been around three months since we met, bitaw. I know where things stand between us, so no heavy speeches or anything (botbota HAHAHAHA), I just genuinely wanted to make something nice for your birthday because I really appreciate having known you and how fun every random conversation with you has been.
 
-Since we don’t have any photos together yet, I had to borrow a few of yours for this card. Hopefully we can finally take some of our own soon, especially when we go get that birthday dessert.
+I truly wish you nothing but the best this year, Sam. Keep pushing toward your dream of becoming a nurse. I know you’re going to make such a caring, amazing RN someday. 🩺✨
 
-I hope you have the best day today, eat all your favorite food, and just enjoy yourself. You deserve it.
+Hope today treats you well, enjoy lots of good food, and have the happiest birthday!
 
-Happy birthday, Sam!
-
+Amping always, Sammy!
 {from}`,
 
   /* QR CODE SETTINGS (formed in a Birthday Cake & Heart that she can scan) */
@@ -93,6 +92,6 @@ Happy birthday, Sam!
     /* Live GitHub Pages URL encoded into the Birthday Cake & Heart QR code */
     url: 'https://andr3licious.github.io/happy-birthday-sammy/',
     secretMessage:
-      'Happy Birthday, Sam! 🎂💖 You found the secret note. Don’t forget to claim your dessert date soon! - Andre',
+      'Oych Sammy, you found the hidden note diaych! 🎂💖 Wishing our future RN the happiest birthday and the brightest year ahead. Amping always, Sam! - Andre ✨',
   },
 };

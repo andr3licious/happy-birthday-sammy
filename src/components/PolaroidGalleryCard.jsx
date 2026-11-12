@@ -63,9 +63,6 @@ function PolaroidItem({ memory, index, onZoom }) {
             <span className="polaroid-caption">{memory.caption}</span>
           </span>
           <span className="polaroid-face polaroid-back">
-            <span className="back-stamp" aria-hidden="true">
-              ✦ KEEPSAKE NOTE ✦
-            </span>
             <span className="back-text">{memory.back}</span>
             <span className="back-footer">
               <small>{memory.date || ''}</small>

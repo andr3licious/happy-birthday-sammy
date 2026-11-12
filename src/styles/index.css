@@ -1355,11 +1355,17 @@ h1, h2, h3, p { margin: 0; }
 }
 
 /* ---------- 3 · Polaroid Scrapbook Board ---------- */
+.gallery-card {
+  display: flex;
+  flex-direction: column;
+}
 .gallery {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(18px, 3vw, 28px) clamp(14px, 2.4vw, 24px);
-  padding: 16px 8px 10px;
+  align-content: center;
+  gap: clamp(18px, 2.4vw, 24px) clamp(14px, 2.2vw, 22px);
+  padding: 20px 14px 16px;
   border-radius: 16px;
   background:
     radial-gradient(rgba(212, 145, 172, 0.18) 1px, transparent 1px) 0 0 / 16px 16px,
@@ -1373,18 +1379,12 @@ h1, h2, h3, p { margin: 0; }
     margin: 0 auto;
   }
 }
-@media (min-width: 341px) and (max-width: 559px) {
+@media (min-width: 341px) {
   .gallery > .polaroid-wrap:nth-child(3):last-child,
   .gallery > .polaroid:nth-child(3):last-child {
     grid-column: 1 / -1;
-    width: calc(50% - clamp(6px, 1.2vw, 12px));
+    width: calc(50% - clamp(7px, 1.1vw, 11px));
     justify-self: center;
-  }
-}
-@media (min-width: 560px) {
-  .gallery {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    padding: 20px 16px 14px;
   }
 }
 .polaroid {
@@ -1393,12 +1393,17 @@ h1, h2, h3, p { margin: 0; }
   width: 100%;
   padding: 0;
   border: 0;
+  outline: none;
   background: none;
   cursor: pointer;
   perspective: 1100px;
   touch-action: manipulation;
   transform: rotate(var(--tilt, 0deg));
   transition: transform 0.45s var(--ease-out);
+}
+.polaroid:focus,
+.polaroid:focus-visible {
+  outline: none;
 }
 @media (hover: hover) and (pointer: fine) {
   .polaroid:hover {
@@ -1526,8 +1531,9 @@ h1, h2, h3, p { margin: 0; }
 .polaroid-back {
   transform: rotateY(180deg);
   align-items: center;
-  justify-content: center;
-  padding: 10%;
+  justify-content: space-between;
+  padding: 16% 10% 10%;
+  overflow: hidden;
   text-align: center;
   color: #4a2c40;
   background:
@@ -1535,18 +1541,20 @@ h1, h2, h3, p { margin: 0; }
     linear-gradient(160deg, #fffdf9, #fff0f6);
 }
 .polaroid-back .back-text {
-  display: block;
+  flex: 1;
+  display: grid;
+  place-items: center;
   font-family: var(--font-hand);
   font-weight: 700;
-  font-size: clamp(0.9rem, 8.2cqi, 1.3rem);
+  font-size: clamp(0.86rem, 8cqi, 1.22rem);
   line-height: 1.18;
   text-wrap: balance;
 }
 .polaroid-back small {
   display: block;
-  margin-top: 0.45rem;
-  font-size: clamp(0.6rem, 4.4cqi, 0.74rem);
-  letter-spacing: 0.12em;
+  margin-top: 0;
+  font-size: clamp(0.56rem, 4.2cqi, 0.7rem);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--rose);
   opacity: 0.85;
@@ -2384,7 +2392,7 @@ h1, h2, h3, p { margin: 0; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 @media (max-width: 600px) {
   .book-page > .card,
@@ -3079,7 +3087,7 @@ h1, h2, h3, p { margin: 0; }
 
 .polaroid-zoom-btn {
   position: absolute;
-  top: 9%;
+  bottom: 23%;
   right: 10%;
   z-index: 6;
   width: 24px;
@@ -3087,14 +3095,18 @@ h1, h2, h3, p { margin: 0; }
   padding: 0;
   border-radius: 50%;
   border: 1px solid rgba(229, 91, 138, 0.38);
-  background: rgba(255, 252, 254, 0.9);
+  background: rgba(255, 252, 254, 0.92);
   box-shadow: 0 3px 8px rgba(135, 55, 92, 0.24);
   font-size: 0.68rem;
   line-height: 1;
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: transform 0.2s var(--ease-out), background 0.2s;
+  transition: transform 0.2s var(--ease-out), background 0.2s, opacity 0.2s;
+}
+.polaroid-wrap:has(.polaroid.is-flipped) .polaroid-zoom-btn {
+  opacity: 0;
+  pointer-events: none;
 }
 .polaroid-zoom-btn:hover {
   transform: scale(1.14);
