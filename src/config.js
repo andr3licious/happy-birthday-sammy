@@ -36,7 +36,7 @@ export const CONFIG = {
 
   /* INSERT VOUCHER PRIZE HERE */
   voucher: {
-    prize: 'Birthday Treat (Ice Cream, Cake, Coffee, Fries, or any Food) on Me 🍨🍟',
+    prize: 'Birthday Treat (Ice Cream, Cake, Coffee, Fries, or any Food) on Me 🍨🍰🍟',
     fine: 'No expiry · Claim anytime · Future RN 🩺✨',
   },
 
