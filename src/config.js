@@ -27,7 +27,7 @@ export const CONFIG = {
 
     /* INSERT WHY YOU CHOSE THE SONG HERE */
     linerNotes:
-      "A sweet, nostalgic throwback that's impossible not to smile and sing along to. Hope your birthday is filled with this exact happy energy all day long! 🎶✨",
+      "Had to put this song on here for you. Hope it gets stuck in your head today. Happy birthday! 🎶",
 
     /* Shown on the player only if the song file can't be loaded */
     fallbackTitle: 'Stardust Lullaby',
@@ -48,7 +48,7 @@ export const CONFIG = {
       id: 'snap-1',
       src: 'assets/images/IMG_20260901_230952_379.jpg',
       caption: 'prettiest ✨',
-      back: 'The little pink birds knew what they were doing. Totally ethereal. 🌸',
+      back: 'Still one of my favorite photos of you 🌸',
       date: 'snap 01',
       tilt: '-3.5deg',
       pin: '#ff7fb5',
@@ -57,7 +57,7 @@ export const CONFIG = {
       id: 'snap-2',
       src: 'assets/images/IMG_20260901_233255_746.jpg',
       caption: 'golden hour 💛',
-      back: 'The lighting is great, but it’s really the girl that makes it stunning. ✨',
+      back: 'Golden hour really suits you ✨',
       date: 'snap 02',
       tilt: '2.5deg',
       pin: '#b18cff',
@@ -66,7 +66,7 @@ export const CONFIG = {
       id: 'snap-3',
       src: 'assets/images/IMG_20260902_003828_384.jpg',
       caption: 'goofy side 🥸',
-      back: 'Top-tier chaotic humor. Never lose this side of you! 😂',
+      back: 'Had to include this one too 😂 never change',
       date: 'snap 03',
       tilt: '-3deg',
       pin: '#7fd4ff',
@@ -74,21 +74,18 @@ export const CONFIG = {
   ],
 
   /* INSERT LETTER HERE (line breaks are kept exactly as written) */
-  letter: `Dear Sam,
+  letter: `Hey Sam,
 
-Happy birthday! 🎂✨
+Happy birthday! 🎂
 
-I know it’s only been about two months since we started talking, but getting to know you has genuinely been one of the sweetest highlights of my days.
+It’s funny how we’ve only been talking for about two months, because talking to you is already my favorite part of the day. Whether you’re being goofy or just telling me about random stuff, you always make me smile.
 
-You have this effortless way of making conversations fun, brightening up random moments, and making me smile without even trying (and yes, your goofy side and cute selfies definitely help).
+Since we don’t have any photos together yet, I had to borrow a few of yours for this card. Hopefully we can finally take some of our own soon, especially when we go get that birthday dessert.
 
-We don’t have photos together just yet, but I really hope this year gives us the chance to make plenty of real memories in person.
+I hope you have the best day today, eat all your favorite food, and just enjoy yourself. You deserve it.
 
-I hope today treats you to everything you love: all the sweet desserts, great music, endless laughter, and the warmest vibes. You deserve the best year ahead.
+Happy birthday, Sam!
 
-Make a big wish today, birthday girl. ✨
-
-Warmest birthday wishes,
 {from}`,
 
   /* QR CODE SETTINGS (formed in a Birthday Cake & Heart that she can scan) */
@@ -96,6 +93,6 @@ Warmest birthday wishes,
     /* Live GitHub Pages URL encoded into the Birthday Cake & Heart QR code */
     url: 'https://andr3licious.github.io/happy-birthday-sammy/',
     secretMessage:
-      'Happy Birthday, Sam! 🎂💖 Secret unlocked: You officially get unlimited sweet dessert dates, endless laughs, and the happiest year ahead! — Andre ✨',
+      'Happy Birthday, Sam! 🎂💖 You found the secret note. Don’t forget to claim your dessert date soon! - Andre',
   },
 };

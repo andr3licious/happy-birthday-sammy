@@ -110,53 +110,12 @@ export default function App() {
 
   const coverImg =
     CONFIG.song.cover || (CONFIG.memories[0] && CONFIG.memories[0].src) || '';
+  const isDoubleSpread = spread === 2 || spread === 3;
 
   return (
     <>
       <div className="sky" aria-hidden="true" />
       <StardustCanvas ref={stardustRef} />
-
-      {/* Floating Mini Vinyl Pill when browsing pages outside Page 2 */}
-      {spread > 0 && spread !== 2 && (
-        <div
-          className={`mini-vinyl-pill ${playing ? 'is-playing' : ''}`}
-          role="region"
-          aria-label="Now playing mini bar"
-        >
-          <button
-            type="button"
-            className="mini-vinyl-disc-btn"
-            onClick={() => music.toggle()}
-            aria-label={playing ? 'Pause music' : 'Play music'}
-            title={playing ? 'Pause music' : 'Play music'}
-          >
-            <span
-              className="mini-vinyl-disc"
-              style={
-                coverImg
-                  ? { backgroundImage: `url("${encodeURI(coverImg)}")` }
-                  : undefined
-              }
-            />
-          </button>
-          <button
-            type="button"
-            className="mini-vinyl-info"
-            onClick={() => goToSpread(2)}
-            title="Jump to Music & Snaps page"
-          >
-            <span className="mini-vinyl-title">
-              {fileFailed ? CONFIG.song.fallbackTitle : CONFIG.song.title}
-            </span>
-            <span className="mini-vinyl-eq" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-            </span>
-          </button>
-        </div>
-      )}
-
       <MuteButton />
 
       <main
@@ -179,7 +138,7 @@ export default function App() {
               '--book-ry': `${bookTilt.ry}deg`,
             }}
           >
-            {/* Top Stitched Fabric Ribbon Bookmark Tabs */}
+            {/* Top Stitched Fabric Ribbon Bookmark Tabs + In-Flow Mini Vinyl Pill */}
             <nav className="book-bookmarks" aria-label="Birthday card pages">
               {SPREADS.map((s) => (
                 <button
@@ -201,14 +160,60 @@ export default function App() {
               >
                 <span className="bookmark-stitch">📕 Close Card</span>
               </button>
+
+              {spread !== 2 && (
+                <div
+                  className={`mini-vinyl-pill ${playing ? 'is-playing' : ''}`}
+                  role="region"
+                  aria-label="Now playing mini bar"
+                >
+                  <button
+                    type="button"
+                    className="mini-vinyl-disc-btn"
+                    onClick={() => music.toggle()}
+                    aria-label={playing ? 'Pause music' : 'Play music'}
+                    title={playing ? 'Pause music' : 'Play music'}
+                  >
+                    <span
+                      className="mini-vinyl-disc"
+                      style={
+                        coverImg
+                          ? { backgroundImage: `url("${encodeURI(coverImg)}")` }
+                          : undefined
+                      }
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    className="mini-vinyl-info"
+                    onClick={() => goToSpread(2)}
+                    title="Jump to Music & Snaps page"
+                  >
+                    <span className="mini-vinyl-title">
+                      {fileFailed ? CONFIG.song.fallbackTitle : CONFIG.song.title}
+                    </span>
+                    <span className="mini-vinyl-eq" aria-hidden="true">
+                      <i />
+                      <i />
+                      <i />
+                    </span>
+                  </button>
+                </div>
+              )}
             </nav>
 
             {/* The Open 3D Birthday Card Book */}
-            <div className="bday-book-3d">
+            <div
+              className={`bday-book-3d ${
+                isDoubleSpread ? 'is-double-spread' : 'is-single-spread'
+              }`}
+            >
               {/* 3D Layered Paper Thickness Edges */}
               <div className="book-edge-left" aria-hidden="true" />
               <div className="book-edge-right" aria-hidden="true" />
-              <div className="book-spine-crease" aria-hidden="true" />
+              {isDoubleSpread && (
+                <div className="book-spine-crease" aria-hidden="true" />
+              )}
 
               {/* Gold-Foil Filigree Corners */}
               <span className="foil-corner foil-tl" aria-hidden="true" />
@@ -228,32 +233,6 @@ export default function App() {
                   <span className="flip-sheet-GoldLine" />
                 </div>
               </div>
-
-              {/* Interactive Curled Page Corners */}
-              <button
-                type="button"
-                className="page-curl-corner curl-left"
-                onClick={() =>
-                  spread > 1
-                    ? goToSpread(spread - 1, 'prev')
-                    : goToSpread(0, 'closing')
-                }
-                aria-label={
-                  spread > 1 ? 'Turn to previous page' : 'Fold card cover'
-                }
-                title={
-                  spread > 1 ? 'Click corner to turn back' : 'Fold card cover'
-                }
-              />
-              {spread < 4 && (
-                <button
-                  type="button"
-                  className="page-curl-corner curl-right"
-                  onClick={() => goToSpread(spread + 1, 'next')}
-                  aria-label="Turn to next page"
-                  title="Click corner to turn page"
-                />
-              )}
 
               {/* SPREAD 1: Interactive Pop-Up Birthday Cake */}
               {spread === 1 && (

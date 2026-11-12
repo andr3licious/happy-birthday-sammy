@@ -56,10 +56,10 @@ export function TypewriterLetterCard({ active }) {
     }
 
     const ch = chars[typedCount - 1] || '';
-    let delay = typedCount === 0 ? 500 : 26 + Math.random() * 44;
-    if ('.!?'.includes(ch)) delay = 380;
-    else if (',;:'.includes(ch)) delay = 180;
-    else if (ch === '\n') delay = 240;
+    let delay = typedCount === 0 ? 120 : 22 + Math.random() * 34;
+    if ('.!?'.includes(ch)) delay = 280;
+    else if (',;:'.includes(ch)) delay = 140;
+    else if (ch === '\n') delay = 180;
 
     const timer = setTimeout(() => {
       setTypedCount((c) => c + 1);
@@ -84,12 +84,15 @@ export function TypewriterLetterCard({ active }) {
     }
   }, [typedCount, started, done, chars]);
 
-  const skipTapProps = usePointerTap(() => {
-    if (started && !done) {
+  const handleSkip = () => {
+    if (!done) {
+      setStarted(true);
       setTypedCount(chars.length);
       setDone(true);
     }
-  });
+  };
+
+  const skipTapProps = usePointerTap(handleSkip);
 
   const visibleText = done ? fullText : chars.slice(0, typedCount).join('');
 
@@ -99,6 +102,7 @@ export function TypewriterLetterCard({ active }) {
       ref={cardRef}
       className={`card glass letter-card ${done ? 'is-done' : ''}`}
       style={{ '--i': 3 }}
+      onClick={handleSkip}
       {...skipTapProps}
     >
       <span className="washi-tape washi-blush" aria-hidden="true" />
