@@ -8,7 +8,7 @@ export function StageCake({ status, onContinue }) {
   const [blown, setBlown] = useState(false);
   const [swappingPrompt, setSwappingPrompt] = useState(false);
   const [promptText, setPromptText] = useState(
-    'Make a wish and tap the candle on your 3D card to blow it out 🕯️'
+    'Make a wish and tap the candle on your card to blow it out 🕯️'
   );
   const [celebrating, setCelebrating] = useState(false);
   const [showContinue, setShowContinue] = useState(false);
@@ -79,7 +79,7 @@ export function StageCake({ status, onContinue }) {
       ]
         .filter(Boolean)
         .join(' ')}
-      aria-label="3D Birthday Cake Gift Card"
+      aria-label="Birthday Cake Gift Card"
     >
       <p id="cakePrompt" className={`cake-prompt ${swappingPrompt ? 'is-swapping' : ''}`}>
         {promptText}

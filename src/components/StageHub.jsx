@@ -51,9 +51,7 @@ export function StageHub({ status, linerOpen, onOpenLiner, linerBtnRef }) {
       </div>
 
       <footer className="hub-footer">
-        Made with <span className="emoji">💜</span> just for{' '}
-        <span data-fill="name">{CONFIG.name}</span> ·{' '}
-        <span id="year">{new Date().getFullYear()}</span>
+        Just for Sammy · <span id="year">{new Date().getFullYear()}</span>
       </footer>
     </section>
   );

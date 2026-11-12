@@ -127,7 +127,7 @@ function drawFrostingDrips(ctx, x, y, w, dripsCount, color) {
 
 export function QrCakeHeartCard() {
   const canvasRef = useRef(null);
-  const [card3dOpen, setCard3dOpen] = useState(true);
+  const [card3dOpen, setCard3dOpen] = useState(false);
   const [tilt, setTilt] = useState({ rx: 8, ry: -10 });
   const [surpriseOpen, setSurpriseOpen] = useState(false);
   const [customizerOpen, setCustomizerOpen] = useState(false);
@@ -398,15 +398,15 @@ export function QrCakeHeartCard() {
     <article className="card glass qr-cake-card" style={{ '--i': 4 }}>
       <span className="washi-tape washi-rose" aria-hidden="true" />
       <span className="card-sticker" aria-hidden="true">
-        🎂 3D CARD &amp; QR
+        🎂 CARD &amp; QR
       </span>
       <p className="card-eyebrow">Interactive Keepsake</p>
       <h3 className="card-title">
-        Happy Birthday, {CONFIG.name}! <span className="emoji">🎂💖</span>
+        Birthday Cake Card &amp; Scannable QR <span className="emoji">🎂💖</span>
       </h3>
 
       <div className="qr-cake-layout">
-        {/* Left: Interactive 3D Pop-Up Birthday Gift Card Cake */}
+        {/* Left: Interactive Pop-Up Birthday Gift Card Cake */}
         <div className="popup-gift-col">
           <div
             id="giftCard3D"
@@ -420,7 +420,7 @@ export function QrCakeHeartCard() {
             role="button"
             tabIndex={0}
             aria-pressed={card3dOpen}
-            aria-label="Interactive 3D Pop-Up Birthday Cake Card. Tap or move pointer to tilt in 3D."
+            aria-label="Interactive Birthday Cake Card. Tap to open or close."
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -433,7 +433,7 @@ export function QrCakeHeartCard() {
             }}
           >
             <div className="gift-card-3d-pivot">
-              {/* Upright Back Cover of 3D Pop-Up Card */}
+              {/* Upright Back Cover of Pop-Up Card */}
               <div className="gift-card-back">
                 <div className="gift-card-bunting" aria-hidden="true">
                   <span>H</span>
@@ -453,7 +453,7 @@ export function QrCakeHeartCard() {
                 )}
               </div>
 
-              {/* Hinged Horizontal Floor with 3D Pop-Up Multi-Tier Cake */}
+              {/* Hinged Horizontal Floor with Pop-Up Multi-Tier Cake */}
               <div className="gift-card-floor">
                 <div className="floor-crease" aria-hidden="true" />
 
@@ -481,7 +481,9 @@ export function QrCakeHeartCard() {
                 </div>
 
                 <p className="floor-caption">
-                  ✦ Pop-Up Birthday Edition · Tap or Tilt in 3D ✦
+                  {card3dOpen
+                    ? '✦ Pop-Up Birthday Edition · Tap to Close ✦'
+                    : '✦ Tap to Open Your Birthday Card ✦'}
                 </p>
               </div>
             </div>
@@ -496,7 +498,7 @@ export function QrCakeHeartCard() {
                 setCard3dOpen((prev) => !prev);
               }}
             >
-              {card3dOpen ? '📖 Fold 3D Card' : '🎂 Open 3D Card'}
+              {card3dOpen ? '📖 Fold Card' : '🎂 Open Card'}
             </button>
             <button
               type="button"
