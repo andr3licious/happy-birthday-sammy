@@ -166,9 +166,11 @@ export function StageCake({ status, onContinue }) {
           </span>{' '}
           <span className="emoji">🎉</span>
         </h1>
-        <p id="fullName" className="full-name" data-fill="fullName">
-          {CONFIG.fullName}
-        </p>
+        {CONFIG.fullName && (
+          <p id="fullName" className="full-name" data-fill="fullName">
+            {CONFIG.fullName}
+          </p>
+        )}
         <button
           id="continueBtn"
           ref={continueBtnRef}

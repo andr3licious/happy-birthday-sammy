@@ -20,7 +20,7 @@ export function StageIntro({ status, onOpen }) {
         <span className="washi-tape washi-blush" aria-hidden="true" />
         <span className="scrap-stamp" aria-hidden="true">
           <span>SPECIAL DELIVERY</span>
-          <strong>FOR SAMMY ✦</strong>
+          <strong>FOR SAM ✦</strong>
         </span>
         <span className="intro-emoji" aria-hidden="true">
           🎀

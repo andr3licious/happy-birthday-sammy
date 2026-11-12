@@ -125,18 +125,8 @@ function drawFrostingDrips(ctx, x, y, w, dripsCount, color) {
   ctx.restore();
 }
 
-function insideHeart(nx, ny) {
-  // Classic heart implicit equation: (x^2 + y^2 - 1)^3 - x^2 * y^3 <= 0
-  // ny is inverted so top is positive
-  const x = nx * 1.18;
-  const y = -ny * 1.18 + 0.12;
-  const a = x * x + y * y - 1;
-  return a * a * a - x * x * y * y * y <= 0;
-}
-
 export function QrCakeHeartCard() {
   const canvasRef = useRef(null);
-  const [shape, setShape] = useState('cake-heart'); // 'cake-heart' | 'cake' | 'heart'
   const [card3dOpen, setCard3dOpen] = useState(true);
   const [tilt, setTilt] = useState({ rx: 8, ry: -10 });
   const [surpriseOpen, setSurpriseOpen] = useState(false);
@@ -169,7 +159,7 @@ export function QrCakeHeartCard() {
     try {
       qr = QRCode.create(text, { errorCorrectionLevel: 'H' });
     } catch (_) {
-      qr = QRCode.create('Happy Birthday Sammy!', { errorCorrectionLevel: 'H' });
+      qr = QRCode.create('Happy Birthday, Sam!', { errorCorrectionLevel: 'H' });
     }
 
     const N = qr.modules.size;
@@ -197,185 +187,116 @@ export function QrCakeHeartCard() {
     const GOLD = '#D99338';
 
     // Core QR layout box (centered with generous quiet zone)
-    const qrBoxSize = shape === 'heart' ? 248 : 256;
+    const qrBoxSize = 256;
     const cell = qrBoxSize / N;
     const qrX = (W - qrBoxSize) / 2;
-    const qrY = shape === 'heart' ? 172 : 198;
+    const qrY = 198;
     const quietPad = Math.max(cell * 3.2, 22);
 
-    if (shape === 'heart') {
-      // === HEART-FORMED QR SILHOUETTE ===
-      const hCx = W / 2;
-      const hCy = 276;
-      const hScale = 232;
+    // === BIRTHDAY CAKE + HEART QR SILHOUETTE ===
+    const cCx = W / 2;
 
-      // Build exact parametric heart Path2D so fill, stroke, and mosaic match 100%
-      const heartPath = new Path2D();
-      for (let a = 0; a <= Math.PI * 2; a += 0.02) {
-        const hx = 16 * Math.pow(Math.sin(a), 3);
-        const hy = -(13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a));
-        const px = hCx + (hx / 16) * hScale;
-        const py = hCy + (hy / 16) * (hScale * 0.96);
-        if (a === 0) heartPath.moveTo(px, py);
-        else heartPath.lineTo(px, py);
-      }
-      heartPath.closePath();
+    // Crowned with a glowing Pastel Heart + 2 Candles on top of the cake
+    drawCandle(ctx, cCx - 58, 128, 12, 38);
+    drawCandle(ctx, cCx + 58, 128, 12, 38);
+    drawMiniHeart(ctx, cCx, 88, 38, '#FF7AA8');
+    drawMiniHeart(ctx, cCx, 88, 26, '#FFE8F2');
+    drawMiniHeart(ctx, cCx, 88, 15, ROSE);
 
-      ctx.save();
-      ctx.fillStyle = '#FFE6F1';
-      ctx.fill(heartPath);
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = '#F28AB2';
-      ctx.stroke(heartPath);
-      ctx.restore();
+    // Top Cake Tier (above the QR matrix)
+    const topTierW = 240;
+    const topTierH = 54;
+    const topTierX = cCx - topTierW / 2;
+    const topTierY = 124;
+    ctx.fillStyle = '#FFD2E4';
+    drawRoundedRect(ctx, topTierX, topTierY, topTierW, topTierH, 12);
+    ctx.fill();
+    ctx.strokeStyle = '#F28AB2';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    drawFrostingDrips(ctx, topTierX - 2, topTierY, topTierW + 4, 9, '#FFFDFB');
 
-      // Fill the Heart lobes around the QR quiet-zone with matching heart-mosaic modules
-      const step = cell;
-      for (let py = 48; py < H - 32; py += step) {
-        for (let px = 24; px < W - 24; px += step) {
-          // Skip inside the quiet zone of the real QR matrix
-          if (
-            px >= qrX - quietPad &&
-            px <= qrX + qrBoxSize + quietPad &&
-            py >= qrY - quietPad &&
-            py <= qrY + qrBoxSize + quietPad
-          ) {
-            continue;
-          }
-          if (ctx.isPointInPath(heartPath, px, py)) {
-            const hash = Math.abs(Math.sin(px * 12.9898 + py * 78.233) * 43758.5453) % 1;
-            if (hash > 0.24) {
-              const col = hash > 0.68 ? ROSE : hash > 0.44 ? LILAC : DARK;
-              drawMiniHeart(ctx, px, py, step * 0.45, col);
-            }
-          }
-        }
-      }
-
-      // Cute coquette heart crest at top dip of heart
-      drawMiniHeart(ctx, hCx, 108, 22, ROSE);
-      drawMiniHeart(ctx, hCx, 108, 12, '#FFF5F9');
-      ctx.fillStyle = '#FFFDFB';
-      drawRoundedRect(ctx, qrX - quietPad, qrY - quietPad, qrBoxSize + quietPad * 2, qrBoxSize + quietPad * 2, 16);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(229, 91, 138, 0.38)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 4]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    } else {
-      // === BIRTHDAY CAKE (+ HEART) QR SILHOUETTE ===
-      const cCx = W / 2;
-
-      if (shape === 'cake-heart') {
-        // Crowned with a glowing Pastel Heart + 2 Candles on top of the cake
-        drawCandle(ctx, cCx - 58, 128, 12, 38);
-        drawCandle(ctx, cCx + 58, 128, 12, 38);
-        drawMiniHeart(ctx, cCx, 88, 38, '#FF7AA8');
-        drawMiniHeart(ctx, cCx, 88, 26, '#FFE8F2');
-        drawMiniHeart(ctx, cCx, 88, 15, ROSE);
-      } else {
-        // 3 Classic Birthday Candles on top
-        drawCandle(ctx, cCx - 52, 128, 13, 44);
-        drawCandle(ctx, cCx, 128, 13, 52);
-        drawCandle(ctx, cCx + 52, 128, 13, 44);
-      }
-
-      // Top Cake Tier (above the QR matrix)
-      const topTierW = 240;
-      const topTierH = 54;
-      const topTierX = cCx - topTierW / 2;
-      const topTierY = 124;
-      ctx.fillStyle = '#FFD2E4';
-      drawRoundedRect(ctx, topTierX, topTierY, topTierW, topTierH, 12);
-      ctx.fill();
-      ctx.strokeStyle = '#F28AB2';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      drawFrostingDrips(ctx, topTierX - 2, topTierY, topTierW + 4, 9, '#FFFDFB');
-
-      // Decorative heart sprinkles along top tier
-      for (let sx = topTierX + 24; sx < topTierX + topTierW - 18; sx += 28) {
-        drawMiniHeart(ctx, sx, topTierY + 36, 5.5, sx % 56 === 0 ? LILAC : ROSE);
-      }
-
-      // Middle Cake Tier (houses the QR matrix + decorative mosaic side wings)
-      const midTierW = 396;
-      const midTierH = qrBoxSize + quietPad * 2 + 24;
-      const midTierX = cCx - midTierW / 2;
-      const midTierY = qrY - quietPad - 12;
-
-      const tierGrd = ctx.createLinearGradient(midTierX, midTierY, midTierX + midTierW, midTierY);
-      tierGrd.addColorStop(0, '#F7DDF8');
-      tierGrd.addColorStop(0.5, '#FFF5F9');
-      tierGrd.addColorStop(1, '#F7DDF8');
-      ctx.fillStyle = tierGrd;
-      drawRoundedRect(ctx, midTierX, midTierY, midTierW, midTierH, 18);
-      ctx.fill();
-      ctx.strokeStyle = '#D99CE8';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-
-      // Side cake mosaic columns (outside the QR quiet-zone so scanner never confuses them)
-      const step = cell;
-      for (let py = midTierY + 24; py < midTierY + midTierH - 14; py += step) {
-        for (let px = midTierX + 14; px < midTierX + midTierW - 10; px += step) {
-          if (
-            px >= qrX - quietPad - 6 &&
-            px <= qrX + qrBoxSize + quietPad + 6
-          ) {
-            continue;
-          }
-          const hash = Math.abs(Math.sin(px * 19.19 + py * 47.77) * 9182.3) % 1;
-          if (hash > 0.35) {
-            drawMiniHeart(
-              ctx,
-              px,
-              py,
-              step * 0.42,
-              hash > 0.68 ? ROSE : hash > 0.48 ? LILAC : GOLD
-            );
-          }
-        }
-      }
-
-      // Clean white-cream QR quiet-zone frame inside the middle cake tier
-      ctx.fillStyle = '#FFFDFB';
-      drawRoundedRect(
-        ctx,
-        qrX - quietPad,
-        qrY - quietPad,
-        qrBoxSize + quietPad * 2,
-        qrBoxSize + quietPad * 2,
-        14
-      );
-      ctx.fill();
-
-      // Frosting drips along top of middle tier
-      drawFrostingDrips(ctx, midTierX - 3, midTierY - 2, midTierW + 6, 14, '#FFFDFB');
-
-      // Bottom Cake Base & Porcelain Pedestal Plate
-      const botTierW = 446;
-      const botTierH = 34;
-      const botTierX = cCx - botTierW / 2;
-      const botTierY = midTierY + midTierH - 4;
-      ctx.fillStyle = '#FFC4DC';
-      drawRoundedRect(ctx, botTierX, botTierY, botTierW, botTierH, 12);
-      ctx.fill();
-      ctx.strokeStyle = '#E87A9F';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Golden satin ribbon on bottom tier
-      ctx.fillStyle = '#F7D288';
-      ctx.fillRect(botTierX + 4, botTierY + 13, botTierW - 8, 8);
-
-      // Porcelain plate
-      ctx.fillStyle = '#F3E4EE';
-      ctx.beginPath();
-      ctx.ellipse(cCx, botTierY + botTierH + 6, 240, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
+    // Decorative heart sprinkles along top tier
+    for (let sx = topTierX + 24; sx < topTierX + topTierW - 18; sx += 28) {
+      drawMiniHeart(ctx, sx, topTierY + 36, 5.5, sx % 56 === 0 ? LILAC : ROSE);
     }
+
+    // Middle Cake Tier (houses the QR matrix + decorative mosaic side wings)
+    const midTierW = 396;
+    const midTierH = qrBoxSize + quietPad * 2 + 24;
+    const midTierX = cCx - midTierW / 2;
+    const midTierY = qrY - quietPad - 12;
+
+    const tierGrd = ctx.createLinearGradient(midTierX, midTierY, midTierX + midTierW, midTierY);
+    tierGrd.addColorStop(0, '#F7DDF8');
+    tierGrd.addColorStop(0.5, '#FFF5F9');
+    tierGrd.addColorStop(1, '#F7DDF8');
+    ctx.fillStyle = tierGrd;
+    drawRoundedRect(ctx, midTierX, midTierY, midTierW, midTierH, 18);
+    ctx.fill();
+    ctx.strokeStyle = '#D99CE8';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Side cake mosaic columns (outside the QR quiet-zone so scanner never confuses them)
+    const step = cell;
+    for (let py = midTierY + 24; py < midTierY + midTierH - 14; py += step) {
+      for (let px = midTierX + 14; px < midTierX + midTierW - 10; px += step) {
+        if (
+          px >= qrX - quietPad - 6 &&
+          px <= qrX + qrBoxSize + quietPad + 6
+        ) {
+          continue;
+        }
+        const hash = Math.abs(Math.sin(px * 19.19 + py * 47.77) * 9182.3) % 1;
+        if (hash > 0.35) {
+          drawMiniHeart(
+            ctx,
+            px,
+            py,
+            step * 0.42,
+            hash > 0.68 ? ROSE : hash > 0.48 ? LILAC : GOLD
+          );
+        }
+      }
+    }
+
+    // Clean white-cream QR quiet-zone frame inside the middle cake tier
+    ctx.fillStyle = '#FFFDFB';
+    drawRoundedRect(
+      ctx,
+      qrX - quietPad,
+      qrY - quietPad,
+      qrBoxSize + quietPad * 2,
+      qrBoxSize + quietPad * 2,
+      14
+    );
+    ctx.fill();
+
+    // Frosting drips along top of middle tier
+    drawFrostingDrips(ctx, midTierX - 3, midTierY - 2, midTierW + 6, 14, '#FFFDFB');
+
+    // Bottom Cake Base & Porcelain Pedestal Plate
+    const botTierW = 446;
+    const botTierH = 34;
+    const botTierX = cCx - botTierW / 2;
+    const botTierY = midTierY + midTierH - 4;
+    ctx.fillStyle = '#FFC4DC';
+    drawRoundedRect(ctx, botTierX, botTierY, botTierW, botTierH, 12);
+    ctx.fill();
+    ctx.strokeStyle = '#E87A9F';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Golden satin ribbon on bottom tier
+    ctx.fillStyle = '#F7D288';
+    ctx.fillRect(botTierX + 4, botTierY + 13, botTierW - 8, 8);
+
+    // Porcelain plate
+    ctx.fillStyle = '#F3E4EE';
+    ctx.beginPath();
+    ctx.ellipse(cCx, botTierY + botTierH + 6, 240, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     // === RENDER REAL SCANNABLE QR MATRIX ===
     // Center emblem exclusion zone (~11% radius, well within Level H 30% tolerance for all URL lengths)
@@ -425,14 +346,14 @@ export function QrCakeHeartCard() {
     ctx.font = `700 ${Math.round(badgeRad * 0.95)}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(shape === 'heart' ? '💖' : '🎂', badgeX, badgeY + 1);
+    ctx.fillText('🎂', badgeX, badgeY + 1);
 
     // Footer caption on the QR card canvas
     ctx.fillStyle = '#5B3249';
-    ctx.font = '700 15px Quicksand, system-ui, sans-serif';
+    ctx.font = '700 16px Quicksand, system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`Scan me, ${CONFIG.name}! ✨`, W / 2, H - 16);
-  }, [qrPayload, shape]);
+    ctx.fillText(`Happy Birthday, ${CONFIG.name}!`, W / 2, H - 14);
+  }, [qrPayload]);
 
   useEffect(() => {
     renderArtisticQr();
@@ -443,7 +364,7 @@ export function QrCakeHeartCard() {
     if (!canvas) return;
     vibrate(15);
     const link = document.createElement('a');
-    link.download = `sammy-birthday-${shape}-qr.png`;
+    link.download = 'qr-cake-heart.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
@@ -481,7 +402,7 @@ export function QrCakeHeartCard() {
       </span>
       <p className="card-eyebrow">Interactive Keepsake</p>
       <h3 className="card-title">
-        3D Birthday Cake Card &amp; Scannable QR <span className="emoji">🎂💖</span>
+        Happy Birthday, {CONFIG.name}! <span className="emoji">🎂💖</span>
       </h3>
 
       <div className="qr-cake-layout">
@@ -527,7 +448,9 @@ export function QrCakeHeartCard() {
                 <p className="gift-card-back-title">
                   Happy Birthday, {CONFIG.name}!
                 </p>
-                <p className="gift-card-back-sub">{CONFIG.fullName}</p>
+                {CONFIG.fullName && (
+                  <p className="gift-card-back-sub">{CONFIG.fullName}</p>
+                )}
               </div>
 
               {/* Hinged Horizontal Floor with 3D Pop-Up Multi-Tier Cake */}
@@ -586,49 +509,19 @@ export function QrCakeHeartCard() {
           </div>
         </div>
 
-        {/* Right: Scannable Birthday Cake & Heart QR Code */}
+        {/* Right: Scannable Birthday Cake + Heart QR Code */}
         <div className="qr-col">
-          <div className="qr-shape-tabs" role="tablist" aria-label="QR Code Shape">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={shape === 'cake-heart'}
-              className={`qr-tab ${shape === 'cake-heart' ? 'is-active' : ''}`}
-              onClick={() => setShape('cake-heart')}
-            >
-              🎂💖 Cake &amp; Heart
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={shape === 'cake'}
-              className={`qr-tab ${shape === 'cake' ? 'is-active' : ''}`}
-              onClick={() => setShape('cake')}
-            >
-              🎂 Cake QR
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={shape === 'heart'}
-              className={`qr-tab ${shape === 'heart' ? 'is-active' : ''}`}
-              onClick={() => setShape('heart')}
-            >
-              💖 Heart QR
-            </button>
-          </div>
-
           <div className="qr-canvas-frame">
             <canvas
               id="birthdayQrCanvas"
               ref={canvasRef}
               className="qr-canvas"
-              aria-label={`Scannable ${shape} QR code for ${CONFIG.name}`}
+              aria-label={`Scannable Birthday Cake and Heart QR code for ${CONFIG.name}`}
             />
           </div>
 
           <p className="qr-hint">
-            Point your phone camera at the cake/heart QR to scan! 📱✨
+            Point your phone camera at the cake &amp; heart QR to scan! 📱✨
           </p>
 
           <div className="qr-actions">

@@ -4,9 +4,9 @@
    ===================================================================== */
 
 export const CONFIG = {
-  /* INSERT NAME HERE (e.g. 'Sammy' or 'Sam') */
-  name: 'Sammy',
-  fullName: 'Samantha Nicole',
+  /* INSERT NAME HERE (e.g. 'Sam' or 'Sammy') */
+  name: 'Sam',
+  fullName: '',
 
   /* INSERT YOUR NAME HERE (used to sign the letter) */
   from: 'Andre',
@@ -74,7 +74,7 @@ export const CONFIG = {
   ],
 
   /* INSERT LETTER HERE (line breaks are kept exactly as written) */
-  letter: `Dear Sammy,
+  letter: `Dear Sam,
 
 Happy birthday! 🎂✨
 
@@ -93,9 +93,9 @@ Warmest birthday wishes,
 
   /* QR CODE SETTINGS (formed in a Birthday Cake & Heart that she can scan) */
   qr: {
-    /* Live GitHub Pages URL encoded into the Birthday Cake & Heart QR codes */
+    /* Live GitHub Pages URL encoded into the Birthday Cake & Heart QR code */
     url: 'https://andr3licious.github.io/happy-birthday-sammy/',
     secretMessage:
-      'Happy Birthday, Sammy! 🎂💖 Secret unlocked: You officially get unlimited sweet dessert dates, endless laughs, and the happiest year ahead! — Andre ✨',
+      'Happy Birthday, Sam! 🎂💖 Secret unlocked: You officially get unlimited sweet dessert dates, endless laughs, and the happiest year ahead! — Andre ✨',
   },
 };
