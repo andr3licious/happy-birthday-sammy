@@ -1,12 +1,21 @@
 import React, { useRef, useState } from 'react';
+import { music } from '../utils/audio';
+import { vibrate } from '../utils/haptics';
 
 export function StageIntro({ status, onOpen }) {
   const btnRef = useRef(null);
   const [tilt, setTilt] = useState({ rx: 6, ry: -8 });
+  const [untying, setUntying] = useState(false);
 
   const handleClick = () => {
+    if (untying) return;
+    setUntying(true);
+    vibrate([15, 30, 15]);
+    music.waxPop();
     const r = btnRef.current ? btnRef.current.getBoundingClientRect() : null;
-    onOpen(r);
+    setTimeout(() => {
+      onOpen(r);
+    }, 240);
   };
 
   const handlePointerMove = (e) => {
@@ -40,10 +49,26 @@ export function StageIntro({ status, onOpen }) {
           '--cover-ry': `${tilt.ry}deg`,
         }}
       >
-        <div className="intro-card glass closed-card-book">
+        <div
+          className={`intro-card glass closed-card-book ${
+            untying ? 'is-untying' : ''
+          }`}
+        >
           {/* 3D Book Spine & Layered Pages Edge */}
           <span className="cover-spine" aria-hidden="true" />
           <span className="cover-pages-edge" aria-hidden="true" />
+
+          {/* Gold-Foil Filigree Corners */}
+          <span className="foil-corner foil-tl" aria-hidden="true" />
+          <span className="foil-corner foil-tr" aria-hidden="true" />
+          <span className="foil-corner foil-bl" aria-hidden="true" />
+          <span className="foil-corner foil-br" aria-hidden="true" />
+
+          {/* Satin Ribbon Wrap (unties when opening) */}
+          <div className="cover-ribbon-wrap" aria-hidden="true">
+            <span className="satin-ribbon-h" />
+            <span className="satin-ribbon-v" />
+          </div>
 
           <span className="washi-tape washi-blush" aria-hidden="true" />
           <span className="scrap-stamp" aria-hidden="true">
@@ -51,10 +76,24 @@ export function StageIntro({ status, onOpen }) {
             <strong>FOR SAM ✦</strong>
           </span>
 
-          {/* Embossed 3D Mini Cake & Ribbon Crest on the Card Cover */}
-          <div className="cover-cake-emblem" aria-hidden="true">
-            <span className="cover-bow">🎀</span>
-            <span className="cover-cake-icon">🎂</span>
+          {/* Embossed 3D Mini Cake, Satin Bow & Rose-Gold "S" Wax Seal */}
+          <div className="cover-crest-group">
+            <div className="cover-cake-emblem" aria-hidden="true">
+              <span className="cover-bow">🎀</span>
+              <span className="cover-cake-icon">🎂</span>
+            </div>
+            <button
+              type="button"
+              className="wax-seal-badge"
+              onClick={handleClick}
+              aria-label="Break wax seal and open birthday card"
+              title="Tap to break wax seal"
+            >
+              <span className="wax-seal-ring">
+                <span className="wax-seal-monogram">S</span>
+                <span className="wax-seal-heart">♥</span>
+              </span>
+            </button>
           </div>
 
           <p className="card-eyebrow">Birthday Edition · Pop-Up Card</p>
@@ -75,7 +114,9 @@ export function StageIntro({ status, onOpen }) {
             Open Birthday Card <span className="emoji">💌</span>
           </button>
 
-          <p className="intro-hint">🎧 Sound on · Tap to unfold your card</p>
+          <p className="intro-hint">
+            🎧 Sound on · Tap seal or button to untie &amp; unfold
+          </p>
         </div>
       </div>
     </section>

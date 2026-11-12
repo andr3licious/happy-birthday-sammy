@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { CONFIG } from './config';
-import { music } from './utils/audio';
+import { music, useMusic } from './utils/audio';
 import { isReducedMotion } from './utils/confetti';
 import { vibrate } from './utils/haptics';
 import { StardustCanvas } from './components/StardustCanvas';
@@ -15,10 +15,10 @@ import { QrCakeHeartCard } from './components/QrCakeHeartCard';
 import { LinerNotesModal } from './components/LinerNotesModal';
 
 const SPREADS = [
-  { id: 1, label: '🎂 Cake' },
-  { id: 2, label: '🎵 Music & Snaps' },
-  { id: 3, label: '💌 Gift & Letter' },
-  { id: 4, label: '💖 QR Card' },
+  { id: 1, label: '🎂 Cake', color: 'rose' },
+  { id: 2, label: '🎵 Music & Snaps', color: 'lilac' },
+  { id: 3, label: '💌 Gift & Letter', color: 'gold' },
+  { id: 4, label: '💖 QR Card', color: 'berry' },
 ];
 
 export default function App() {
@@ -26,7 +26,9 @@ export default function App() {
   const [spread, setSpread] = useState(0);
   const [turnDir, setTurnDir] = useState('none'); // 'none' | 'opening' | 'next' | 'prev' | 'closing'
   const [linerOpen, setLinerOpen] = useState(false);
-  const [bookTilt, setBookTilt] = useState({ rx: 4, ry: -4 });
+  const [bookTilt, setBookTilt] = useState({ rx: 3, ry: -2 });
+
+  const { playing, fileFailed } = useMusic();
 
   const stardustRef = useRef(null);
   const linerBtnRef = useRef(null);
@@ -49,6 +51,7 @@ export default function App() {
 
       setTurnDir(dir);
       vibrate(14);
+      music.pageTurn();
 
       const delay = isReducedMotion() ? 120 : 520;
       setTimeout(() => {
@@ -96,8 +99,8 @@ export default function App() {
     const nx = (e.clientX - r.left) / r.width - 0.5;
     const ny = (e.clientY - r.top) / r.height - 0.5;
     setBookTilt({
-      rx: Math.max(-6, Math.min(7, 2 - ny * 8)),
-      ry: Math.max(-8, Math.min(8, nx * 10)),
+      rx: Math.max(-5, Math.min(6, 2 - ny * 7)),
+      ry: Math.max(-7, Math.min(7, nx * 9)),
     });
   };
 
@@ -105,10 +108,55 @@ export default function App() {
     setBookTilt({ rx: 3, ry: -2 });
   };
 
+  const coverImg =
+    CONFIG.song.cover || (CONFIG.memories[0] && CONFIG.memories[0].src) || '';
+
   return (
     <>
       <div className="sky" aria-hidden="true" />
       <StardustCanvas ref={stardustRef} />
+
+      {/* Floating Mini Vinyl Pill when browsing pages outside Page 2 */}
+      {spread > 0 && spread !== 2 && (
+        <div
+          className={`mini-vinyl-pill ${playing ? 'is-playing' : ''}`}
+          role="region"
+          aria-label="Now playing mini bar"
+        >
+          <button
+            type="button"
+            className="mini-vinyl-disc-btn"
+            onClick={() => music.toggle()}
+            aria-label={playing ? 'Pause music' : 'Play music'}
+            title={playing ? 'Pause music' : 'Play music'}
+          >
+            <span
+              className="mini-vinyl-disc"
+              style={
+                coverImg
+                  ? { backgroundImage: `url("${encodeURI(coverImg)}")` }
+                  : undefined
+              }
+            />
+          </button>
+          <button
+            type="button"
+            className="mini-vinyl-info"
+            onClick={() => goToSpread(2)}
+            title="Jump to Music & Snaps page"
+          >
+            <span className="mini-vinyl-title">
+              {fileFailed ? CONFIG.song.fallbackTitle : CONFIG.song.title}
+            </span>
+            <span className="mini-vinyl-eq" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+          </button>
+        </div>
+      )}
+
       <MuteButton />
 
       <main
@@ -131,16 +179,18 @@ export default function App() {
               '--book-ry': `${bookTilt.ry}deg`,
             }}
           >
-            {/* Top Ribbon Bookmark Tabs */}
+            {/* Top Stitched Fabric Ribbon Bookmark Tabs */}
             <nav className="book-bookmarks" aria-label="Birthday card pages">
               {SPREADS.map((s) => (
                 <button
                   key={s.id}
                   type="button"
-                  className={`bookmark-tab ${spread === s.id ? 'is-current' : ''}`}
+                  className={`bookmark-tab ribbon-${s.color} ${
+                    spread === s.id ? 'is-current' : ''
+                  }`}
                   onClick={() => goToSpread(s.id)}
                 >
-                  {s.label}
+                  <span className="bookmark-stitch">{s.label}</span>
                 </button>
               ))}
               <button
@@ -149,7 +199,7 @@ export default function App() {
                 onClick={() => goToSpread(0, 'closing')}
                 aria-label="Close birthday card"
               >
-                📕 Close Card
+                <span className="bookmark-stitch">📕 Close Card</span>
               </button>
             </nav>
 
@@ -159,6 +209,51 @@ export default function App() {
               <div className="book-edge-left" aria-hidden="true" />
               <div className="book-edge-right" aria-hidden="true" />
               <div className="book-spine-crease" aria-hidden="true" />
+
+              {/* Gold-Foil Filigree Corners */}
+              <span className="foil-corner foil-tl" aria-hidden="true" />
+              <span className="foil-corner foil-tr" aria-hidden="true" />
+              <span className="foil-corner foil-bl" aria-hidden="true" />
+              <span className="foil-corner foil-br" aria-hidden="true" />
+
+              {/* Real 3D Flipping Page Sheet during Page Transitions */}
+              <div
+                className={`book-flip-sheet is-${turnDir}`}
+                aria-hidden="true"
+              >
+                <div className="flip-sheet-face flip-sheet-front">
+                  <span className="flip-sheet-GoldLine" />
+                </div>
+                <div className="flip-sheet-face flip-sheet-back">
+                  <span className="flip-sheet-GoldLine" />
+                </div>
+              </div>
+
+              {/* Interactive Curled Page Corners */}
+              <button
+                type="button"
+                className="page-curl-corner curl-left"
+                onClick={() =>
+                  spread > 1
+                    ? goToSpread(spread - 1, 'prev')
+                    : goToSpread(0, 'closing')
+                }
+                aria-label={
+                  spread > 1 ? 'Turn to previous page' : 'Fold card cover'
+                }
+                title={
+                  spread > 1 ? 'Click corner to turn back' : 'Fold card cover'
+                }
+              />
+              {spread < 4 && (
+                <button
+                  type="button"
+                  className="page-curl-corner curl-right"
+                  onClick={() => goToSpread(spread + 1, 'next')}
+                  aria-label="Turn to next page"
+                  title="Click corner to turn page"
+                />
+              )}
 
               {/* SPREAD 1: Interactive Pop-Up Birthday Cake */}
               {spread === 1 && (
@@ -212,7 +307,9 @@ export default function App() {
                   id="prevPageBtn"
                   className="btn-ghost page-turn-btn"
                   onClick={() =>
-                    spread > 1 ? goToSpread(spread - 1, 'prev') : goToSpread(0, 'closing')
+                    spread > 1
+                      ? goToSpread(spread - 1, 'prev')
+                      : goToSpread(0, 'closing')
                   }
                 >
                   {spread > 1 ? '← Previous Page' : '📕 Front Cover'}
@@ -221,7 +318,8 @@ export default function App() {
                 <div className="book-footer-meta">
                   <span className="book-page-num">Page {spread} of 4</span>
                   <span className="hub-footer">
-                    Just for Sammy · <span id="year">{new Date().getFullYear()}</span>
+                    Just for Sammy ·{' '}
+                    <span id="year">{new Date().getFullYear()}</span>
                   </span>
                 </div>
 

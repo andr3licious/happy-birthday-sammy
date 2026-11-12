@@ -410,6 +410,41 @@ class MusicEngine {
     src.start(t);
     src.stop(t + 0.6);
   }
+
+  pageTurn() {
+    if (!this.unlock() || this.muted) return;
+    const t = this.ctx.currentTime;
+    const dur = 0.28;
+    const len = Math.floor(this.ctx.sampleRate * dur);
+    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      const env = Math.sin((i / len) * Math.PI);
+      data[i] = (Math.random() * 2 - 1) * env * 0.65;
+    }
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    const bp = this.ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(1950, t);
+    bp.frequency.exponentialRampToValueAtTime(680, t + dur);
+    bp.Q.value = 1.4;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.11, t + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(bp).connect(g).connect(this.master);
+    src.start(t);
+    src.stop(t + dur + 0.02);
+  }
+
+  waxPop() {
+    if (!this.unlock() || this.muted) return;
+    const t = this.ctx.currentTime + 0.01;
+    this.bell(this.midi(88), t, 0.12, 1.1);
+    this.bell(this.midi(95), t + 0.05, 0.1, 1.3);
+    this.bell(this.midi(100), t + 0.11, 0.09, 1.5);
+  }
 }
 
 export const music = new MusicEngine();

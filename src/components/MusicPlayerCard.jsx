@@ -23,7 +23,12 @@ export function MusicPlayerCard({ linerOpen, onOpenLiner, linerBtnRef }) {
       <span className="card-sticker" aria-hidden="true">
         ♫ ON REPEAT
       </span>
-      <p className="card-eyebrow">Now Playing</p>
+
+      <p className="card-eyebrow">Now Playing · Birthday Soundtrack</p>
+      <h3 className="card-title">
+        Spin the Record <span className="emoji">💿</span>
+      </h3>
+
       <div className="player">
         <div className="turntable">
           <div className="vinyl">
@@ -36,19 +41,27 @@ export function MusicPlayerCard({ linerOpen, onOpenLiner, linerBtnRef }) {
           <div className="tonearm" aria-hidden="true" />
         </div>
         <div className="track">
-          <h3 id="songTitle" className="track-title">
+          <h4 id="songTitle" className="track-title">
             {fileFailed ? CONFIG.song.fallbackTitle : CONFIG.song.title}
-          </h3>
+          </h4>
           <p id="songArtist" className="track-artist">
             {fileFailed ? CONFIG.song.fallbackArtist : CONFIG.song.artist}
           </p>
-          <div className="eq" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
+
+          <div className="track-progress-row" aria-hidden="true">
+            <div className="eq">
+              <i />
+              <i />
+              <i />
+              <i />
+              <i />
+            </div>
+            <div className="track-scrubber">
+              <span className="track-scrubber-fill" />
+              <span className="track-scrubber-dot" />
+            </div>
           </div>
+
           <div className="player-actions">
             <button
               id="playBtn"
@@ -77,6 +90,23 @@ export function MusicPlayerCard({ linerOpen, onOpenLiner, linerBtnRef }) {
               📝 Liner Notes
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Coquette Scrapbook Soundtrack Note Strip (balances left/right page height) */}
+      <div className="player-lyric-strip">
+        <div className="lyric-strip-header">
+          <span className="lyric-pin" aria-hidden="true">🎀</span>
+          <span className="lyric-strip-label">SOUNDTRACK DEDICATION</span>
+          <span className="lyric-pin" aria-hidden="true">✿</span>
+        </div>
+        <p className="lyric-strip-quote">
+          &ldquo;{CONFIG.song.linerNotes}&rdquo;
+        </p>
+        <div className="lyric-mood-tags" aria-hidden="true">
+          <span>✨ Birthday Vibes</span>
+          <span>🎶 Throwback Classic</span>
+          <span>💖 Track 01 · For {CONFIG.name}</span>
         </div>
       </div>
     </article>
