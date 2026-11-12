@@ -24,7 +24,7 @@ export function MusicPlayerCard({ linerOpen, onOpenLiner, linerBtnRef }) {
         ♫ ON REPEAT
       </span>
 
-      <p className="card-eyebrow">Now Playing · Birthday Soundtrack</p>
+      <p className="card-eyebrow">Now Playing</p>
       <h3 className="card-title">
         Spin the Record <span className="emoji">💿</span>
       </h3>

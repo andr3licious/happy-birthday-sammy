@@ -30,7 +30,7 @@ function PolaroidItem({ memory, index, onZoom }) {
 
   return (
     <div
-      className={`polaroid-wrap`}
+      className={`polaroid-wrap ${flipped ? 'is-flipped' : ''}`}
       style={{ '--tilt': tilt, '--pin': pin }}
     >
       <button
@@ -75,15 +75,17 @@ function PolaroidItem({ memory, index, onZoom }) {
         </span>
       </button>
 
-      <button
-        type="button"
-        className="polaroid-zoom-btn"
-        onClick={handleZoomClick}
-        aria-label={`Enlarge photo: ${memory.caption}`}
-        title="View larger"
-      >
-        🔍
-      </button>
+      {!flipped && (
+        <button
+          type="button"
+          className="polaroid-zoom-btn"
+          onClick={handleZoomClick}
+          aria-label={`Enlarge photo: ${memory.caption}`}
+          title="View larger"
+        >
+          🔍
+        </button>
+      )}
     </div>
   );
 }

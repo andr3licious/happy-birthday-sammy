@@ -17,12 +17,6 @@ export function StageCake({ status, onContinue }) {
   const candleBtnRef = useRef(null);
   const continueBtnRef = useRef(null);
 
-  useEffect(() => {
-    if (status === 'active' && candleBtnRef.current) {
-      candleBtnRef.current.focus({ preventScroll: true });
-    }
-  }, [status]);
-
   const handleBlowOut = () => {
     if (blown) return;
     setBlown(true);
