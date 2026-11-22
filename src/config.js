@@ -80,7 +80,7 @@ export const CONFIG = {
 
 Happy birthday! 🎂✨
 
-Crazy how it’s already been around three months since we met, bitaw. I know where things stand between us, so no heavy speeches or anything (botbota HAHAHAHA), I just genuinely wanted to make something nice for your birthday because I really appreciate having known you and how fun every random conversation with you has been.
+Crazy how it’s already been around three months since we met, bitaw. I know where things stand between us, so no yeah HAHAHA, I just genuinely wanted to make something nice for your birthday because I really appreciate having known you and how fun every random conversation with you has been.
 
 I truly wish you nothing but the best this year, Sam. Keep pushing toward your dream of becoming a nurse. I know you’re going to make such a caring, amazing RN someday. 🩺✨
 
