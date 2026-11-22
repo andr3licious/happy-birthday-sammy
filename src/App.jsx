@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { CONFIG } from './config';
 import { music, useMusic } from './utils/audio';
 import { isReducedMotion } from './utils/confetti';
@@ -26,18 +26,34 @@ export default function App() {
   const [spread, setSpread] = useState(0);
   const [turnDir, setTurnDir] = useState('none'); // 'none' | 'opening' | 'next' | 'prev' | 'closing'
   const [linerOpen, setLinerOpen] = useState(false);
+  const [subModalOpen, setSubModalOpen] = useState(false);
   const [bookTilt, setBookTilt] = useState({ rx: 3, ry: -2 });
+
+  // Persisted progress across page turns
+  const [cakeBlown, setCakeBlown] = useState(false);
+  const [flippedSnaps, setFlippedSnaps] = useState({});
+  const [voucherRevealed, setVoucherRevealed] = useState(false);
+  const [letterDone, setLetterDone] = useState(false);
+  const [card3dOpen, setCard3dOpen] = useState(false);
 
   const { playing, fileFailed } = useMusic();
 
   const stardustRef = useRef(null);
   const linerBtnRef = useRef(null);
   const transitioningRef = useRef(false);
+  const touchRef = useRef(null);
+
+  const anyModalOpen = linerOpen || subModalOpen;
+
+  const toggleSnapFlip = useCallback((key) => {
+    setFlippedSnaps((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
 
   const goToSpread = useCallback(
     (targetSpread, customDir) => {
       if (transitioningRef.current || targetSpread === spread) return;
       transitioningRef.current = true;
+      setSubModalOpen(false);
 
       const dir =
         customDir ||
@@ -65,6 +81,70 @@ export default function App() {
     },
     [spread]
   );
+
+  // Keyboard ArrowLeft / ArrowRight page navigation
+  useEffect(() => {
+    if (spread < 1 || anyModalOpen) return undefined;
+    const onKeyDown = (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target;
+      if (
+        target &&
+        typeof target.closest === 'function' &&
+        target.closest('input, textarea, select, [role="slider"]')
+      ) {
+        return;
+      }
+      if (e.key === 'ArrowRight' && spread < 4) {
+        e.preventDefault();
+        goToSpread(spread + 1, 'next');
+      } else if (e.key === 'ArrowLeft' && spread > 1) {
+        e.preventDefault();
+        goToSpread(spread - 1, 'prev');
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [spread, anyModalOpen, goToSpread]);
+
+  const handleTouchStart = (e) => {
+    if (anyModalOpen || !e.touches || e.touches.length !== 1) {
+      touchRef.current = null;
+      return;
+    }
+    const target = e.target;
+    const blocked = Boolean(
+      target &&
+        typeof target.closest === 'function' &&
+        target.closest(
+          '.scratch-wrap, .track-scrubber, .gift-card-3d-stage, input, textarea'
+        )
+    );
+    touchRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+      t: Date.now(),
+      blocked,
+    };
+  };
+
+  const handleTouchEnd = (e) => {
+    const start = touchRef.current;
+    touchRef.current = null;
+    if (!start || start.blocked || anyModalOpen || !e.changedTouches || !e.changedTouches.length) {
+      return;
+    }
+    const dx = e.changedTouches[0].clientX - start.x;
+    const dy = e.changedTouches[0].clientY - start.y;
+    const dt = Date.now() - start.t;
+    if (dt < 650 && Math.abs(dx) > 65 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+      if (dx < 0 && spread < 4) {
+        goToSpread(spread + 1, 'next');
+      } else if (dx > 0 && spread > 1) {
+        goToSpread(spread - 1, 'prev');
+      }
+    }
+  };
 
   const handleOpenCard = useCallback(
     (btnRect) => {
@@ -207,6 +287,8 @@ export default function App() {
               className={`bday-book-3d ${
                 isDoubleSpread ? 'is-double-spread' : 'is-single-spread'
               }`}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
             >
               {/* 3D Layered Paper Thickness Edges */}
               <div className="book-edge-left" aria-hidden="true" />
@@ -239,6 +321,9 @@ export default function App() {
                 <div className="book-spread book-spread-single">
                   <StageCake
                     status="active"
+                    blown={cakeBlown}
+                    onBlowOut={() => setCakeBlown(true)}
+                    onRelight={() => setCakeBlown(false)}
                     onContinue={() => goToSpread(2, 'next')}
                   />
                 </div>
@@ -255,7 +340,11 @@ export default function App() {
                     />
                   </div>
                   <div className="book-page book-page-right">
-                    <PolaroidGalleryCard />
+                    <PolaroidGalleryCard
+                      flippedMap={flippedSnaps}
+                      onToggleFlip={toggleSnapFlip}
+                      onModalChange={setSubModalOpen}
+                    />
                   </div>
                 </div>
               )}
@@ -264,10 +353,18 @@ export default function App() {
               {spread === 3 && (
                 <div className="book-spread book-spread-double">
                   <div className="book-page book-page-left">
-                    <ScratchVoucherCard active={spread === 3} />
+                    <ScratchVoucherCard
+                      active={spread === 3}
+                      revealed={voucherRevealed}
+                      onReveal={() => setVoucherRevealed(true)}
+                    />
                   </div>
                   <div className="book-page book-page-right">
-                    <TypewriterLetterCard active={spread === 3} />
+                    <TypewriterLetterCard
+                      active={spread === 3}
+                      done={letterDone}
+                      onDone={() => setLetterDone(true)}
+                    />
                   </div>
                 </div>
               )}
@@ -275,7 +372,11 @@ export default function App() {
               {/* SPREAD 4: Interactive Card & Scannable Cake + Heart QR */}
               {spread === 4 && (
                 <div className="book-spread book-spread-single">
-                  <QrCakeHeartCard />
+                  <QrCakeHeartCard
+                    card3dOpen={card3dOpen}
+                    onToggleCard3d={() => setCard3dOpen((prev) => !prev)}
+                    onModalChange={setSubModalOpen}
+                  />
                 </div>
               )}
 

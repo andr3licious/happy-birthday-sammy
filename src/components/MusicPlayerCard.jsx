@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { CONFIG } from '../config';
 import { music, useMusic } from '../utils/audio';
 import { usePointerTap } from '../utils/haptics';
 
+function formatTime(sec) {
+  if (!Number.isFinite(sec) || sec <= 0) return '0:00';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 export function MusicPlayerCard({ linerOpen, onOpenLiner, linerBtnRef }) {
-  const { playing, fileFailed } = useMusic();
+  const { playing, fileFailed, usingSynth, currentTime, duration } = useMusic();
+  const [dragPct, setDragPct] = useState(null);
+  const scrubberRef = useRef(null);
 
   const cover =
     CONFIG.song.cover || (CONFIG.memories[0] && CONFIG.memories[0].src) || '';
@@ -13,6 +22,60 @@ export function MusicPlayerCard({ linerOpen, onOpenLiner, linerBtnRef }) {
     : undefined;
 
   const linerTapProps = usePointerTap(onOpenLiner);
+
+  const canSeek = !fileFailed && !usingSynth && duration > 0;
+  const ratioFromClientX = (clientX) => {
+    const el = scrubberRef.current;
+    if (!el) return 0;
+    const r = el.getBoundingClientRect();
+    if (!r.width) return 0;
+    return Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+  };
+
+  const handleScrubDown = (e) => {
+    if (!canSeek) return;
+    e.stopPropagation();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (_) {
+      /* ignore */
+    }
+    const ratio = ratioFromClientX(e.clientX);
+    setDragPct(ratio * 100);
+    music.seek(ratio * duration);
+  };
+
+  const handleScrubMove = (e) => {
+    if (dragPct === null || !canSeek) return;
+    e.stopPropagation();
+    const ratio = ratioFromClientX(e.clientX);
+    setDragPct(ratio * 100);
+    music.seek(ratio * duration);
+  };
+
+  const handleScrubEnd = () => {
+    if (dragPct !== null) setDragPct(null);
+  };
+
+  const handleScrubKeyDown = (e) => {
+    if (!canSeek) return;
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      e.stopPropagation();
+      music.seek((currentTime || 0) - 5);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      e.stopPropagation();
+      music.seek((currentTime || 0) + 5);
+    }
+  };
+
+  const pct =
+    dragPct !== null
+      ? dragPct
+      : canSeek
+      ? Math.min(100, Math.max(0, (currentTime / duration) * 100))
+      : 38;
 
   return (
     <article
@@ -48,17 +111,50 @@ export function MusicPlayerCard({ linerOpen, onOpenLiner, linerBtnRef }) {
             {fileFailed ? CONFIG.song.fallbackArtist : CONFIG.song.artist}
           </p>
 
-          <div className="track-progress-row" aria-hidden="true">
-            <div className="eq">
+          <div className="track-progress-row">
+            <div className="eq" aria-hidden="true">
               <i />
               <i />
               <i />
               <i />
               <i />
             </div>
-            <div className="track-scrubber">
-              <span className="track-scrubber-fill" />
-              <span className="track-scrubber-dot" />
+            <div className="track-scrubber-wrap">
+              <div
+                ref={scrubberRef}
+                className={`track-scrubber ${
+                  usingSynth || fileFailed ? 'is-synth' : ''
+                }`}
+                role="slider"
+                tabIndex={canSeek ? 0 : -1}
+                aria-label="Seek audio position"
+                aria-valuemin={0}
+                aria-valuemax={Math.round(duration || 0)}
+                aria-valuenow={Math.round(currentTime || 0)}
+                onPointerDown={handleScrubDown}
+                onPointerMove={handleScrubMove}
+                onPointerUp={handleScrubEnd}
+                onPointerCancel={handleScrubEnd}
+                onLostPointerCapture={handleScrubEnd}
+                onKeyDown={handleScrubKeyDown}
+              >
+                <span className="track-scrubber-rail" aria-hidden="true">
+                  <span
+                    className="track-scrubber-fill"
+                    style={{ width: `${pct}%` }}
+                  />
+                  <span
+                    className="track-scrubber-dot"
+                    style={{ left: `${pct}%` }}
+                  />
+                </span>
+              </div>
+              {!(usingSynth || fileFailed) && (
+                <div className="track-times">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{duration > 0 ? formatTime(duration) : '--:--'}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -76,6 +172,16 @@ export function MusicPlayerCard({ linerOpen, onOpenLiner, linerBtnRef }) {
               <svg className="i-pause" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
                 <path d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z" fill="currentColor" />
               </svg>
+            </button>
+            <button
+              id="restartSongBtn"
+              className="restart-song-btn"
+              type="button"
+              aria-label="Restart song"
+              title="Restart song"
+              onClick={() => music.restart()}
+            >
+              ↺
             </button>
             <button
               id="linerBtn"

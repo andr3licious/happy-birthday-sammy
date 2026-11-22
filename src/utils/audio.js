@@ -14,6 +14,9 @@ class MusicEngine {
     this.usingSynth = false;
     this.playing = false;
     this.muted = false;
+    this.currentTime = 0;
+    this.duration = 0;
+    this._lastTimeTick = -1;
     this.fadeRaf = 0;
     this._snapshot = this._buildState();
 
@@ -33,6 +36,35 @@ class MusicEngine {
       } else {
         this.fileFailed = true;
       }
+
+      const syncDuration = () => {
+        const d = Number.isFinite(this.el.duration) ? this.el.duration : 0;
+        if (d !== this.duration) {
+          this.duration = d;
+          this.emit();
+        }
+      };
+
+      this.el.addEventListener('loadedmetadata', syncDuration);
+      this.el.addEventListener('durationchange', syncDuration);
+
+      this.el.addEventListener('timeupdate', () => {
+        const t = this.el.currentTime || 0;
+        const tick = Math.floor(t * 4);
+        const d = Number.isFinite(this.el.duration) ? this.el.duration : this.duration;
+        if (tick !== this._lastTimeTick || d !== this.duration) {
+          this._lastTimeTick = tick;
+          this.currentTime = t;
+          this.duration = d;
+          this.emit();
+        }
+      });
+
+      this.el.addEventListener('seeked', () => {
+        this.currentTime = this.el.currentTime || 0;
+        this._lastTimeTick = Math.floor(this.currentTime * 4);
+        this.emit();
+      });
 
       this.el.addEventListener('pause', () => {
         if (!this.usingSynth && this.playing && !this.el.ended) {
@@ -81,6 +113,8 @@ class MusicEngine {
       muted: this.muted,
       usingSynth: this.usingSynth,
       fileFailed: this.fileFailed,
+      currentTime: this.currentTime,
+      duration: this.duration,
     };
   }
 
@@ -351,6 +385,30 @@ class MusicEngine {
   toggle() {
     if (this.playing) this.pause();
     else this.play();
+  }
+
+  seek(seconds) {
+    if (!this.el || this.usingSynth || this.fileFailed) return;
+    const d = this.el.duration;
+    if (!Number.isFinite(d) || d <= 0) return;
+    const target = clamp(seconds, 0, d);
+    try {
+      this.el.currentTime = target;
+    } catch (_) {
+      return;
+    }
+    this.currentTime = target;
+    this._lastTimeTick = Math.floor(target * 4);
+    this.emit();
+  }
+
+  restart() {
+    if (this.el && !this.usingSynth && !this.fileFailed) {
+      this.seek(0);
+    }
+    if (!this.playing) {
+      this.play();
+    }
   }
 
   setMuted(m) {

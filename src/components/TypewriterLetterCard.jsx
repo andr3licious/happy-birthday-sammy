@@ -3,16 +3,16 @@ import { CONFIG } from '../config';
 import { isReducedMotion } from '../utils/confetti';
 import { usePointerTap } from '../utils/haptics';
 
-export function TypewriterLetterCard({ active }) {
+export function TypewriterLetterCard({ active, done: persistedDone = false, onDone }) {
   const fullText = useMemo(
     () => CONFIG.letter.replace('{from}', CONFIG.from).trim(),
     []
   );
   const chars = useMemo(() => Array.from(fullText), [fullText]);
 
-  const [typedCount, setTypedCount] = useState(0);
-  const [started, setStarted] = useState(false);
-  const [done, setDone] = useState(false);
+  const [typedCount, setTypedCount] = useState(persistedDone ? chars.length : 0);
+  const [started, setStarted] = useState(persistedDone);
+  const [done, setDone] = useState(persistedDone);
 
   const cardRef = useRef(null);
   const bodyRef = useRef(null);
@@ -48,10 +48,12 @@ export function TypewriterLetterCard({ active }) {
     if (isReducedMotion()) {
       setTypedCount(chars.length);
       setDone(true);
+      if (onDone) onDone();
       return;
     }
     if (typedCount >= chars.length) {
       setDone(true);
+      if (onDone) onDone();
       return;
     }
 
@@ -66,7 +68,7 @@ export function TypewriterLetterCard({ active }) {
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [started, done, typedCount, chars]);
+  }, [started, done, typedCount, chars, onDone]);
 
   // Keep caret in view on desktop scrollable body
   useEffect(() => {
@@ -89,7 +91,15 @@ export function TypewriterLetterCard({ active }) {
       setStarted(true);
       setTypedCount(chars.length);
       setDone(true);
+      if (onDone) onDone();
     }
+  };
+
+  const handleReplay = (e) => {
+    e.stopPropagation();
+    setDone(false);
+    setTypedCount(0);
+    setStarted(true);
   };
 
   const skipTapProps = usePointerTap(handleSkip);
@@ -122,7 +132,20 @@ export function TypewriterLetterCard({ active }) {
       <p id="letterSr" className="sr-only">
         {fullText}
       </p>
-      <p className="letter-hint">Tap the letter to skip ahead ✨</p>
+      {!done ? (
+        <p className="letter-hint">Tap the letter to skip ahead ✨</p>
+      ) : (
+        <div className="letter-done-bar">
+          <button
+            id="replayLetterBtn"
+            type="button"
+            className="letter-replay-btn"
+            onClick={handleReplay}
+          >
+            ↺ Replay typing
+          </button>
+        </div>
+      )}
     </article>
   );
 }

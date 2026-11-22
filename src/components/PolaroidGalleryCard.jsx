@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CONFIG } from '../config';
 import { music } from '../utils/audio';
 import { vibrate, usePointerTap } from '../utils/haptics';
@@ -6,20 +6,16 @@ import { vibrate, usePointerTap } from '../utils/haptics';
 const DEFAULT_TILTS = ['-4deg', '3deg', '-2.5deg', '4.5deg', '-3deg', '2deg'];
 const DEFAULT_PINS = ['#ff7fb5', '#b18cff', '#f6c75e', '#7fd4ff'];
 
-function PolaroidItem({ memory, index, onZoom }) {
-  const [flipped, setFlipped] = useState(false);
+function PolaroidItem({ memory, index, flipped, onToggle, onZoom }) {
   const [missing, setMissing] = useState(false);
 
   const tilt = memory.tilt || DEFAULT_TILTS[index % DEFAULT_TILTS.length];
   const pin = memory.pin || DEFAULT_PINS[index % DEFAULT_PINS.length];
 
   const tapProps = usePointerTap(() => {
-    setFlipped((prev) => {
-      const next = !prev;
-      vibrate(10);
-      music.pageTurn();
-      return next;
-    });
+    vibrate(10);
+    music.pageTurn();
+    if (onToggle) onToggle();
   });
 
   const handleZoomClick = (e) => {
@@ -87,7 +83,7 @@ function PolaroidItem({ memory, index, onZoom }) {
   );
 }
 
-export function PolaroidGalleryCard() {
+export function PolaroidGalleryCard({ flippedMap = {}, onToggleFlip, onModalChange }) {
   const [zoomIdx, setZoomIdx] = useState(null);
   const [zoomFlipped, setZoomFlipped] = useState(false);
 
@@ -112,6 +108,46 @@ export function PolaroidGalleryCard() {
     setZoomIdx((zoomIdx + delta + total) % total);
   };
 
+  useEffect(() => {
+    const isOpen = zoomIdx !== null;
+    if (onModalChange) onModalChange(isOpen);
+    if (!isOpen) return undefined;
+
+    document.documentElement.style.overflow = 'hidden';
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setZoomIdx(null);
+        setZoomFlipped(false);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        vibrate(10);
+        music.pageTurn();
+        setZoomFlipped(false);
+        setZoomIdx((prev) => {
+          const total = CONFIG.memories.length;
+          return ((prev ?? 0) - 1 + total) % total;
+        });
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        vibrate(10);
+        music.pageTurn();
+        setZoomFlipped(false);
+        setZoomIdx((prev) => {
+          const total = CONFIG.memories.length;
+          return ((prev ?? 0) + 1) % total;
+        });
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.removeEventListener('keydown', onKeyDown);
+      if (onModalChange) onModalChange(false);
+    };
+  }, [zoomIdx, onModalChange]);
+
   return (
     <article className="card glass gallery-card" style={{ '--i': 2 }}>
       <span className="washi-tape washi-lilac" aria-hidden="true" />
@@ -123,14 +159,19 @@ export function PolaroidGalleryCard() {
         A Few Favorites <span className="emoji">📸</span>
       </h3>
       <div id="gallery" className="gallery">
-        {CONFIG.memories.map((memory, index) => (
-          <PolaroidItem
-            key={memory.id || index}
-            memory={memory}
-            index={index}
-            onZoom={handleOpenZoom}
-          />
-        ))}
+        {CONFIG.memories.map((memory, index) => {
+          const key = memory.id || index;
+          return (
+            <PolaroidItem
+              key={key}
+              memory={memory}
+              index={index}
+              flipped={Boolean(flippedMap[key])}
+              onToggle={() => onToggleFlip && onToggleFlip(key)}
+              onZoom={handleOpenZoom}
+            />
+          );
+        })}
       </div>
       <p className="gallery-hint">
         Tap a photo to flip it over · Tap 🔍 to view close-up

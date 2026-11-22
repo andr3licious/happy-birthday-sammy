@@ -870,7 +870,8 @@ h1, h2, h3, p { margin: 0; }
 }
 .bday-title,
 .full-name,
-.continue-btn {
+.continue-btn,
+.relight-btn {
   opacity: 0;
   visibility: hidden;
   transform: translateY(14px);
@@ -899,7 +900,8 @@ h1, h2, h3, p { margin: 0; }
 }
 .stage-cake.is-celebrating .bday-title,
 .stage-cake.is-celebrating .full-name,
-.stage-cake.show-continue .continue-btn {
+.stage-cake.show-continue .continue-btn,
+.stage-cake.show-continue .relight-btn {
   opacity: 1;
   visibility: visible;
   transform: none;
@@ -2831,9 +2833,25 @@ h1, h2, h3, p { margin: 0; }
   margin: 0;
   flex-shrink: 0;
 }
+.track-scrubber-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
 .track-scrubber {
   position: relative;
-  flex: 1;
+  width: 100%;
+  padding: 6px 0;
+  cursor: pointer;
+  touch-action: none;
+  outline: none;
+}
+.track-scrubber-rail {
+  position: relative;
+  display: block;
+  width: 100%;
   height: 6px;
   border-radius: 999px;
   background: rgba(229, 91, 138, 0.15);
@@ -2845,22 +2863,38 @@ h1, h2, h3, p { margin: 0; }
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--rose), var(--lav));
-  transition: width 0.5s ease;
 }
-.player-card.is-playing .track-scrubber-fill {
+.player-card.is-playing .track-scrubber.is-synth .track-scrubber-fill {
   animation: scrubPulse 8s ease-in-out infinite alternate;
 }
 .track-scrubber-dot {
   position: absolute;
   top: 50%;
   left: 38%;
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: #ffffff;
   border: 2px solid var(--rose);
   box-shadow: 0 2px 6px rgba(215, 75, 120, 0.35);
+  transition: transform 0.15s var(--ease-out);
+}
+.track-scrubber:hover .track-scrubber-dot,
+.track-scrubber:focus-visible .track-scrubber-dot {
+  transform: translate(-50%, -50%) scale(1.22);
+}
+.track-scrubber:focus-visible .track-scrubber-rail {
+  box-shadow: 0 0 0 3px rgba(229, 91, 138, 0.28);
+}
+.track-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
 }
 @keyframes scrubPulse {
   0%   { width: 28%; }
@@ -3249,6 +3283,141 @@ h1, h2, h3, p { margin: 0; }
   justify-content: center;
   gap: 8px;
   width: 100%;
+}
+
+/* ---------- Polish Upgrades: Audio Restart, Mic Blowout, Save Voucher & Letter Replay ---------- */
+.restart-song-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid rgba(229, 91, 138, 0.32);
+  background: rgba(255, 245, 250, 0.92);
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 6px 16px -8px rgba(175, 75, 118, 0.25);
+  transition: transform 0.22s var(--ease-out), background 0.22s;
+}
+.restart-song-btn:hover {
+  transform: scale(1.07);
+  background: #ffffff;
+}
+.restart-song-btn:active {
+  transform: scale(0.95);
+}
+
+.cake-scene.is-mic-listening .flame-wrap {
+  transform-origin: 50% 100%;
+  transform: skewX(var(--flame-lean, 0deg)) scaleY(var(--flame-scale, 1));
+  transition: transform 0.08s linear;
+}
+.mic-blow-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.mic-blow-btn {
+  font-size: 0.8rem;
+  padding: 0.42em 0.95em;
+}
+.mic-listening-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 245, 250, 0.94);
+  border: 1.5px solid rgba(229, 91, 138, 0.42);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  box-shadow: 0 6px 16px -8px rgba(185, 70, 115, 0.28);
+}
+.mic-meter {
+  width: 44px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(229, 91, 138, 0.18);
+  overflow: hidden;
+}
+.mic-meter span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--rose), var(--gold));
+  transition: width 0.08s linear;
+}
+.mic-cancel-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(229, 91, 138, 0.16);
+  color: var(--rose);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.mic-error-hint {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+
+.cake-reveal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 0.5rem;
+}
+.cake-reveal-actions .continue-btn {
+  margin-top: 0;
+}
+.relight-btn {
+  font-size: 0.84rem;
+  padding: 0.55em 1.05em;
+}
+
+.save-voucher-btn {
+  font-size: 0.8rem;
+  padding: 0.42em 0.95em;
+  margin-left: auto;
+}
+
+.letter-done-bar {
+  margin-top: 0.85rem;
+  display: flex;
+  justify-content: center;
+}
+.letter-replay-btn {
+  border: 0;
+  background: none;
+  color: var(--faint);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 999px;
+  transition: color 0.2s, background 0.2s;
+}
+.letter-replay-btn:hover {
+  color: var(--rose);
+  background: rgba(255, 224, 238, 0.55);
 }
 
 /* ---------- Reduced motion ---------- */

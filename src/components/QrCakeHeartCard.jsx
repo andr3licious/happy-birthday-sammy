@@ -125,12 +125,10 @@ function drawFrostingDrips(ctx, x, y, w, dripsCount, color) {
   ctx.restore();
 }
 
-export function QrCakeHeartCard() {
+export function QrCakeHeartCard({ card3dOpen = false, onToggleCard3d, onModalChange }) {
   const canvasRef = useRef(null);
-  const [card3dOpen, setCard3dOpen] = useState(false);
   const [tilt, setTilt] = useState({ rx: 8, ry: -10 });
   const [surpriseOpen, setSurpriseOpen] = useState(false);
-  const [customizerOpen, setCustomizerOpen] = useState(false);
 
   const defaultPayload = () => {
     if (CONFIG.qr && CONFIG.qr.url) return CONFIG.qr.url;
@@ -148,7 +146,26 @@ export function QrCakeHeartCard() {
     );
   };
 
-  const [qrPayload, setQrPayload] = useState(defaultPayload);
+  const qrPayload = defaultPayload();
+
+  useEffect(() => {
+    if (onModalChange) onModalChange(surpriseOpen);
+    if (!surpriseOpen) return undefined;
+
+    document.documentElement.style.overflow = 'hidden';
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setSurpriseOpen(false);
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.removeEventListener('keydown', onKeyDown);
+      if (onModalChange) onModalChange(false);
+    };
+  }, [surpriseOpen, onModalChange]);
 
   const renderArtisticQr = useCallback(() => {
     const canvas = canvasRef.current;
@@ -415,7 +432,7 @@ export function QrCakeHeartCard() {
             onPointerLeave={handleCardPointerLeave}
             onClick={() => {
               vibrate(12);
-              setCard3dOpen((prev) => !prev);
+              if (onToggleCard3d) onToggleCard3d();
             }}
             role="button"
             tabIndex={0}
@@ -424,7 +441,7 @@ export function QrCakeHeartCard() {
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                setCard3dOpen((prev) => !prev);
+                if (onToggleCard3d) onToggleCard3d();
               }
             }}
             style={{
@@ -495,7 +512,7 @@ export function QrCakeHeartCard() {
               className="btn-ghost"
               onClick={() => {
                 vibrate(10);
-                setCard3dOpen((prev) => !prev);
+                if (onToggleCard3d) onToggleCard3d();
               }}
             >
               {card3dOpen ? '📖 Fold Card' : '🎂 Open Card'}
@@ -535,30 +552,7 @@ export function QrCakeHeartCard() {
             >
               ⬇️ Save QR Image
             </button>
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={() => setCustomizerOpen((prev) => !prev)}
-            >
-              🔗 {customizerOpen ? 'Hide Link Setup' : 'Customize QR'}
-            </button>
           </div>
-
-          {customizerOpen && (
-            <div className="qr-customizer">
-              <label htmlFor="qrPayloadInput" className="qr-customizer-label">
-                QR Code Destination (URL or Secret Birthday Note):
-              </label>
-              <input
-                id="qrPayloadInput"
-                type="text"
-                className="qr-customizer-input"
-                value={qrPayload}
-                onChange={(e) => setQrPayload(e.target.value)}
-                placeholder="Paste website URL, Spotify/TikTok link, or secret note..."
-              />
-            </div>
-          )}
         </div>
       </div>
 

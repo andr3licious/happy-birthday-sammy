@@ -1,43 +1,172 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { CONFIG } from '../config';
 import { music } from '../utils/audio';
 import { celebrateBirthday } from '../utils/confetti';
 import { vibrate, usePointerTap } from '../utils/haptics';
 
-export function StageCake({ status, onContinue }) {
-  const [blown, setBlown] = useState(false);
+const PROMPT_LIT = 'Make a wish and tap the candle on your card to blow it out 🕯️';
+const PROMPT_OUT = 'Your wish is on its way to the stars ✨';
+
+export function StageCake({ status, blown = false, onBlowOut, onRelight, onContinue }) {
   const [swappingPrompt, setSwappingPrompt] = useState(false);
-  const [promptText, setPromptText] = useState(
-    'Make a wish and tap the candle on your card to blow it out 🕯️'
-  );
-  const [celebrating, setCelebrating] = useState(false);
-  const [showContinue, setShowContinue] = useState(false);
+  const [promptText, setPromptText] = useState(blown ? PROMPT_OUT : PROMPT_LIT);
+  const [celebrating, setCelebrating] = useState(blown);
+  const [showContinue, setShowContinue] = useState(blown);
   const [tilt, setTilt] = useState({ rx: 7, ry: 0 });
+  const [micListening, setMicListening] = useState(false);
+  const [micLevel, setMicLevel] = useState(0);
+  const [micError, setMicError] = useState('');
 
   const candleBtnRef = useRef(null);
   const continueBtnRef = useRef(null);
+  const blowingRef = useRef(blown);
+  const promptTimerRef = useRef(null);
+  const continueTimerRef = useRef(null);
+  const micStreamRef = useRef(null);
+  const micCtxRef = useRef(null);
+  const micRafRef = useRef(0);
+  const blowFramesRef = useRef(0);
+  const handleBlowOutRef = useRef(null);
 
-  const handleBlowOut = () => {
-    if (blown) return;
-    setBlown(true);
+  const micSupported =
+    typeof navigator !== 'undefined' &&
+    Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+  const stopMic = useCallback(() => {
+    if (micRafRef.current) {
+      cancelAnimationFrame(micRafRef.current);
+      micRafRef.current = 0;
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch (_) {
+          /* ignore */
+        }
+      });
+      micStreamRef.current = null;
+    }
+    if (micCtxRef.current) {
+      try {
+        micCtxRef.current.close();
+      } catch (_) {
+        /* ignore */
+      }
+      micCtxRef.current = null;
+    }
+    blowFramesRef.current = 0;
+    setMicListening(false);
+    setMicLevel(0);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stopMic();
+      clearTimeout(promptTimerRef.current);
+      clearTimeout(continueTimerRef.current);
+    };
+  }, [stopMic]);
+
+  const handleBlowOut = useCallback(() => {
+    if (blown || blowingRef.current) return;
+    blowingRef.current = true;
+    stopMic();
+    setMicError('');
+    if (onBlowOut) onBlowOut();
     music.whoosh();
     vibrate([25, 30, 25]);
     setSwappingPrompt(true);
 
-    setTimeout(() => {
-      setPromptText('Your wish is on its way to the stars ✨');
+    clearTimeout(promptTimerRef.current);
+    clearTimeout(continueTimerRef.current);
+
+    promptTimerRef.current = setTimeout(() => {
+      setPromptText(PROMPT_OUT);
       setSwappingPrompt(false);
       music.chime();
       celebrateBirthday();
       setCelebrating(true);
 
-      setTimeout(() => {
+      continueTimerRef.current = setTimeout(() => {
         setShowContinue(true);
         if (continueBtnRef.current) {
           continueBtnRef.current.focus({ preventScroll: true });
         }
       }, 1700);
     }, 450);
+  }, [blown, onBlowOut, stopMic]);
+
+  handleBlowOutRef.current = handleBlowOut;
+
+  const startMic = async () => {
+    if (blown || blowingRef.current || !micSupported) return;
+    setMicError('');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micStreamRef.current = stream;
+
+      const AC = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AC();
+      micCtxRef.current = ctx;
+      if (ctx.state === 'suspended') {
+        await ctx.resume().catch(() => {});
+      }
+
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+
+      const data = new Uint8Array(analyser.fftSize);
+      blowFramesRef.current = 0;
+      setMicListening(true);
+
+      const monitor = () => {
+        if (!micStreamRef.current) return;
+        analyser.getByteTimeDomainData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) {
+          const v = (data[i] - 128) / 128;
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / data.length);
+        setMicLevel(Math.min(1, rms * 5));
+
+        if (rms > 0.13) {
+          blowFramesRef.current += 1;
+        } else {
+          blowFramesRef.current = Math.max(0, blowFramesRef.current - 1);
+        }
+
+        if (blowFramesRef.current >= 10) {
+          stopMic();
+          if (handleBlowOutRef.current) handleBlowOutRef.current();
+          return;
+        }
+
+        micRafRef.current = requestAnimationFrame(monitor);
+      };
+
+      micRafRef.current = requestAnimationFrame(monitor);
+    } catch (_) {
+      stopMic();
+      setMicError('Mic unavailable — just tap the candle 🕯️');
+    }
+  };
+
+  const handleRelight = () => {
+    stopMic();
+    clearTimeout(promptTimerRef.current);
+    clearTimeout(continueTimerRef.current);
+    blowingRef.current = false;
+    setSwappingPrompt(false);
+    setCelebrating(false);
+    setShowContinue(false);
+    setMicError('');
+    setPromptText(PROMPT_LIT);
+    vibrate(10);
+    if (onRelight) onRelight();
   };
 
   const handlePointerMove = (e) => {
@@ -82,12 +211,16 @@ export function StageCake({ status, onContinue }) {
       {/* Interactive 3D Pop-Up Birthday Gift Card Stage */}
       <div
         id="cakeScene"
-        className="cake-scene cake-card-3d-wrap"
+        className={`cake-scene cake-card-3d-wrap ${
+          micListening ? 'is-mic-listening' : ''
+        }`}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
         style={{
           '--card-rx': `${tilt.rx}deg`,
           '--card-ry': `${tilt.ry}deg`,
+          '--flame-lean': `${(micLevel * 18).toFixed(1)}deg`,
+          '--flame-scale': `${(1 - micLevel * 0.22).toFixed(2)}`,
         }}
       >
         <div className="cake-card-3d">
@@ -153,6 +286,38 @@ export function StageCake({ status, onContinue }) {
         </div>
       </div>
 
+      {!blown && (micSupported || micError) && (
+        <div className="mic-blow-wrap">
+          {micSupported &&
+            (!micListening ? (
+              <button
+                id="micBlowBtn"
+                type="button"
+                className="btn-ghost mic-blow-btn"
+                onClick={startMic}
+              >
+                🎤 Or blow using your mic
+              </button>
+            ) : (
+              <div className="mic-listening-pill" role="status" aria-live="polite">
+                <span className="mic-meter" aria-hidden="true">
+                  <span style={{ width: `${Math.round(micLevel * 100)}%` }} />
+                </span>
+                <span>Blow toward your mic...</span>
+                <button
+                  type="button"
+                  className="mic-cancel-btn"
+                  onClick={stopMic}
+                  aria-label="Cancel microphone"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          {micError && <p className="mic-error-hint">{micError}</p>}
+        </div>
+      )}
+
       <div className="cake-reveal">
         <h1 id="bdayTitle" className="bday-title">
           <span className="grad">
@@ -165,15 +330,25 @@ export function StageCake({ status, onContinue }) {
             {CONFIG.fullName}
           </p>
         )}
-        <button
-          id="continueBtn"
-          ref={continueBtnRef}
-          className="btn-glow continue-btn"
-          type="button"
-          {...continueTapProps}
-        >
-          Turn the Page <span className="emoji">✨</span>
-        </button>
+        <div className="cake-reveal-actions">
+          <button
+            id="continueBtn"
+            ref={continueBtnRef}
+            className="btn-glow continue-btn"
+            type="button"
+            {...continueTapProps}
+          >
+            Turn the Page <span className="emoji">✨</span>
+          </button>
+          <button
+            id="relightBtn"
+            type="button"
+            className="btn-ghost relight-btn"
+            onClick={handleRelight}
+          >
+            🕯️ Re-light
+          </button>
+        </div>
       </div>
     </section>
   );

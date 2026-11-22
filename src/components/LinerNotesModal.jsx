@@ -64,7 +64,7 @@ export function LinerNotesModal({ open, onClose }) {
           Why this song? <span className="emoji">🎶</span>
         </h3>
         <p id="linerText" className="liner-text">
-          {CONFIG.song.linerNotes}
+          {CONFIG.song.modalNote || CONFIG.song.linerNotes}
         </p>
       </div>
     </div>

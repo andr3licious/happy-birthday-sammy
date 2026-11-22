@@ -28,6 +28,8 @@ export const CONFIG = {
     /* INSERT WHY YOU CHOSE THE SONG HERE */
     linerNotes:
       'Had to put this song on here for you, Sammy. Hope it gets stuck in your head today and makes you smile. Happy birthday! 🎶✨',
+    modalNote:
+      'Fun fact: this throwback literally had to be Track 01 on here. Play it loud while you celebrate today, future RN — you deserve a super chill, happy birthday! 🎧🩺✨',
 
     /* Shown on the player only if the song file can't be loaded */
     fallbackTitle: 'Stardust Lullaby',

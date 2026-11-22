@@ -7,19 +7,53 @@ import { vibrate } from '../utils/haptics';
 const THRESHOLD = 0.5;
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
-export function ScratchVoucherCard({ active }) {
+function drawRoundRectPath(ctx, x, y, w, h, r) {
+  const rad = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rad, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rad);
+  ctx.arcTo(x + w, y + h, x, y + h, rad);
+  ctx.arcTo(x, y + h, x, y, rad);
+  ctx.arcTo(x, y, x + w, y, rad);
+  ctx.closePath();
+}
+
+function wrapCanvasLines(ctx, text, maxWidth) {
+  const words = String(text).split(/\s+/);
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+export function ScratchVoucherCard({ active, revealed: persistedRevealed = false, onReveal }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const drawingRef = useRef(false);
   const lastPosRef = useRef(null);
   const scratchedRef = useRef(false);
-  const revealedRef = useRef(false);
+  const revealedRef = useRef(persistedRevealed);
   const brushRef = useRef(22);
   const lastCheckRef = useRef(0);
+  const savedTimerRef = useRef(null);
 
-  const [isReady, setIsReady] = useState(false);
-  const [revealed, setRevealed] = useState(false);
-  const [percent, setPercent] = useState(0);
+  const [isReady, setIsReady] = useState(persistedRevealed);
+  const [revealed, setRevealed] = useState(persistedRevealed);
+  const [percent, setPercent] = useState(persistedRevealed ? 100 : 0);
+  const [savedMsg, setSavedMsg] = useState(false);
+
+  useEffect(() => {
+    return () => clearTimeout(savedTimerRef.current);
+  }, []);
 
   const reveal = useCallback(() => {
     if (revealedRef.current) return;
@@ -27,6 +61,7 @@ export function ScratchVoucherCard({ active }) {
     drawingRef.current = false;
     setRevealed(true);
     setPercent(100);
+    if (onReveal) onReveal();
     music.sparkle();
     vibrate([18, 40, 18]);
 
@@ -42,7 +77,118 @@ export function ScratchVoucherCard({ active }) {
         },
       });
     }
-  }, []);
+  }, [onReveal]);
+
+  const handleSaveVoucher = () => {
+    const W = 960;
+    const H = 580;
+    const c = document.createElement('canvas');
+    c.width = W;
+    c.height = H;
+    const ctx = c.getContext('2d');
+    if (!ctx) return;
+
+    // Pastel rose-cream background
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#FFFDF9');
+    bg.addColorStop(1, '#FFF0F6');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Champagne & lavender radial corner glows
+    const g1 = ctx.createRadialGradient(0, 0, 20, 0, 0, 560);
+    g1.addColorStop(0, 'rgba(255, 226, 178, 0.55)');
+    g1.addColorStop(1, 'rgba(255, 226, 178, 0)');
+    ctx.fillStyle = g1;
+    ctx.fillRect(0, 0, W, H);
+
+    const g2 = ctx.createRadialGradient(W, H, 20, W, H, 560);
+    g2.addColorStop(0, 'rgba(232, 205, 255, 0.55)');
+    g2.addColorStop(1, 'rgba(232, 205, 255, 0)');
+    ctx.fillStyle = g2;
+    ctx.fillRect(0, 0, W, H);
+
+    // Outer border
+    drawRoundRectPath(ctx, 10, 10, W - 20, H - 20, 32);
+    ctx.strokeStyle = 'rgba(229, 91, 138, 0.45)';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Inner dashed rose border
+    ctx.save();
+    ctx.setLineDash([10, 8]);
+    drawRoundRectPath(ctx, 22, 22, W - 44, H - 44, 24);
+    ctx.strokeStyle = 'rgba(218, 102, 146, 0.48)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+
+    // Ticket notches at left & right midpoints
+    ctx.fillStyle = '#FFEAF3';
+    [0, W].forEach((nx) => {
+      ctx.beginPath();
+      ctx.arc(nx, H / 2, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(229, 91, 138, 0.42)';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    });
+
+    // Top rose-to-lavender pill badge: BIRTHDAY VOUCHER
+    const badgeW = 280;
+    const badgeH = 44;
+    const badgeX = (W - badgeW) / 2;
+    const badgeY = 66;
+    const pillGrad = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeW, badgeY);
+    pillGrad.addColorStop(0, '#E55B8A');
+    pillGrad.addColorStop(1, '#9D79E8');
+    ctx.fillStyle = pillGrad;
+    drawRoundRectPath(ctx, badgeX, badgeY, badgeW, badgeH, 22);
+    ctx.fill();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '700 18px Quicksand, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('B I R T H D A Y   V O U C H E R', W / 2, badgeY + badgeH / 2 + 1);
+
+    // Cursive "Valid for:"
+    ctx.fillStyle = '#E55B8A';
+    ctx.font = '700 34px Caveat, cursive';
+    ctx.fillText('Valid for:', W / 2, 154);
+
+    // Main prize text (word-wrapped)
+    ctx.fillStyle = '#3A2233';
+    ctx.font = '700 40px "Cormorant Garamond", Georgia, serif';
+    const lines = wrapCanvasLines(ctx, CONFIG.voucher.prize, 780);
+    const lineHeight = 52;
+    const startY = lines.length > 1 ? 236 : 262;
+    lines.forEach((ln, idx) => {
+      ctx.fillText(ln, W / 2, startY + idx * lineHeight);
+    });
+
+    // Fine print
+    const afterPrizeY = startY + Math.max(0, lines.length - 1) * lineHeight + 64;
+    ctx.fillStyle = '#7E556B';
+    ctx.font = '600 22px Quicksand, system-ui, sans-serif';
+    ctx.fillText(CONFIG.voucher.fine, W / 2, Math.min(afterPrizeY, H - 106));
+
+    // Footer
+    ctx.fillStyle = '#C4849F';
+    ctx.font = '700 24px Caveat, cursive';
+    ctx.fillText(`Just for Sammy · ${new Date().getFullYear()}`, W / 2, H - 56);
+
+    const link = document.createElement('a');
+    link.download = 'sammy-birthday-voucher.png';
+    link.href = c.toDataURL('image/png');
+    link.click();
+
+    vibrate(14);
+    music.sparkle();
+    setSavedMsg(true);
+    clearTimeout(savedTimerRef.current);
+    savedTimerRef.current = setTimeout(() => setSavedMsg(false), 3000);
+  };
 
   const paintCover = useCallback(() => {
     const wrap = wrapRef.current;
@@ -133,6 +279,10 @@ export function ScratchVoucherCard({ active }) {
 
   useEffect(() => {
     if (!active) return;
+    if (revealedRef.current) {
+      setIsReady(true);
+      return;
+    }
     paintCover();
     const wrap = wrapRef.current;
     if (!wrap) return;
@@ -315,13 +465,23 @@ export function ScratchVoucherCard({ active }) {
         </div>
         <p id="scratchStatus" className="scratch-status">
           {revealed ? (
-            'Revealed! Screenshot it as proof 😉'
+            'Unlocked! Ready to claim 😉'
           ) : (
             <>
               <span id="scratchPct">{percent}%</span> scratched
             </>
           )}
         </p>
+        {revealed && (
+          <button
+            id="saveVoucherBtn"
+            type="button"
+            className="btn-ghost save-voucher-btn"
+            onClick={handleSaveVoucher}
+          >
+            {savedMsg ? '✓ Voucher Saved!' : '📥 Save Voucher'}
+          </button>
+        )}
       </div>
     </article>
   );
