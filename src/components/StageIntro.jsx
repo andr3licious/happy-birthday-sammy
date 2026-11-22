@@ -101,7 +101,7 @@ export function StageIntro({ status, onOpen }) {
             Someone special has a birthday today... <span className="emoji">✨</span>
           </h1>
           <p className="intro-sub">
-            A handmade pop-up birthday card, made just for you.
+            A little pop-up birthday card, made just for you.
           </p>
 
           <button
