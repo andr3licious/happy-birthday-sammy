@@ -6,6 +6,9 @@ const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 class MusicEngine {
   constructor() {
     this.listeners = new Set();
+    this.tracks =
+      Array.isArray(CONFIG.songs) && CONFIG.songs.length ? CONFIG.songs : [CONFIG.song];
+    this.trackIndex = 0;
     this.el = typeof Audio !== 'undefined' ? new Audio() : null;
     this.ctx = null;
     this.master = null;
@@ -17,6 +20,7 @@ class MusicEngine {
     this.currentTime = 0;
     this.duration = 0;
     this._lastTimeTick = -1;
+    this._switching = false;
     this.fadeRaf = 0;
     this._snapshot = this._buildState();
 
@@ -25,9 +29,14 @@ class MusicEngine {
       this.el.preload = 'auto';
       this.el.playsInline = true;
 
-      if (CONFIG.song.src) {
-        this.el.addEventListener('error', () => this.markFileFailed());
-        this.el.src = CONFIG.song.src;
+      this.el.addEventListener('error', () => {
+        if (this.el.error && this.el.error.code === 1) return;
+        this.markFileFailed();
+      });
+
+      const initialTrack = this.getCurrentTrack();
+      if (initialTrack && initialTrack.src) {
+        this.el.src = initialTrack.src;
         try {
           this.el.load();
         } catch (_) {
@@ -67,6 +76,7 @@ class MusicEngine {
       });
 
       this.el.addEventListener('pause', () => {
+        if (this._switching) return;
         if (!this.usingSynth && this.playing && !this.el.ended) {
           this.playing = false;
           this.emit();
@@ -74,6 +84,7 @@ class MusicEngine {
       });
 
       this.el.addEventListener('play', () => {
+        this._switching = false;
         if (!this.usingSynth && !this.playing) {
           this.playing = true;
           this.emit();
@@ -92,15 +103,39 @@ class MusicEngine {
       });
     }
 
-    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator && typeof window !== 'undefined' && window.MediaMetadata) {
+    this._updateMediaSession();
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
       try {
-        navigator.mediaSession.metadata = new window.MediaMetadata({
-          title: CONFIG.song.title,
-          artist: CONFIG.song.artist,
-          album: `For ${CONFIG.name} 💜`,
-        });
         navigator.mediaSession.setActionHandler('play', () => this.play());
         navigator.mediaSession.setActionHandler('pause', () => this.pause());
+        if (this.tracks.length > 1) {
+          navigator.mediaSession.setActionHandler('previoustrack', () => this.prevTrack(true));
+          navigator.mediaSession.setActionHandler('nexttrack', () => this.nextTrack(true));
+        }
+      } catch (_) {
+        /* ignore */
+      }
+    }
+  }
+
+  getCurrentTrack() {
+    return this.tracks[this.trackIndex] || this.tracks[0] || CONFIG.song;
+  }
+
+  _updateMediaSession() {
+    if (
+      typeof navigator !== 'undefined' &&
+      'mediaSession' in navigator &&
+      typeof window !== 'undefined' &&
+      window.MediaMetadata
+    ) {
+      const track = this.getCurrentTrack();
+      try {
+        navigator.mediaSession.metadata = new window.MediaMetadata({
+          title: track.title,
+          artist: track.artist,
+          album: `For ${CONFIG.name} 💜`,
+        });
       } catch (_) {
         /* ignore */
       }
@@ -115,6 +150,8 @@ class MusicEngine {
       fileFailed: this.fileFailed,
       currentTime: this.currentTime,
       duration: this.duration,
+      trackIndex: this.trackIndex,
+      trackCount: this.tracks.length,
     };
   }
 
@@ -140,7 +177,8 @@ class MusicEngine {
   fadeInElement() {
     if (!this.el) return;
     cancelAnimationFrame(this.fadeRaf);
-    const target = clamp(CONFIG.song.volume ?? 0.7, 0, 1);
+    const track = this.getCurrentTrack();
+    const target = clamp((track && track.volume) ?? 0.7, 0, 1);
     try {
       this.el.volume = 0;
     } catch (_) {
@@ -409,6 +447,60 @@ class MusicEngine {
     if (!this.playing) {
       this.play();
     }
+  }
+
+  selectTrack(index, autoplay = true) {
+    const total = this.tracks.length;
+    if (!total) return;
+    const nextIdx = ((index % total) + total) % total;
+    if (nextIdx === this.trackIndex) {
+      if (autoplay && !this.playing) this.play();
+      return;
+    }
+
+    cancelAnimationFrame(this.fadeRaf);
+    if (this.usingSynth && this.lullaby) {
+      this.lullaby.stop();
+    }
+
+    this.trackIndex = nextIdx;
+    this.fileFailed = false;
+    this.usingSynth = false;
+    this.currentTime = 0;
+    this.duration = 0;
+    this._lastTimeTick = -1;
+    this._updateMediaSession();
+
+    const track = this.getCurrentTrack();
+    if (this.el && track && track.src) {
+      this._switching = true;
+      try {
+        this.el.pause();
+        this.el.src = track.src;
+        this.el.load();
+      } catch (_) {
+        this.fileFailed = true;
+      }
+      setTimeout(() => {
+        this._switching = false;
+      }, 60);
+    } else {
+      this.fileFailed = true;
+    }
+
+    if (autoplay) {
+      this.play();
+    } else {
+      this.emit();
+    }
+  }
+
+  nextTrack(autoplay = true) {
+    this.selectTrack(this.trackIndex + 1, autoplay);
+  }
+
+  prevTrack(autoplay = true) {
+    this.selectTrack(this.trackIndex - 1, autoplay);
   }
 
   setMuted(m) {

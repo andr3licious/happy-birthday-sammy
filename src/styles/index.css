@@ -2980,8 +2980,76 @@ h1, h2, h3, p { margin: 0; }
   100% { width: 78%; }
 }
 
+.track-switcher {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 1rem;
+}
+.track-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(229, 91, 138, 0.24);
+  background: rgba(255, 246, 250, 0.78);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    transform 0.2s var(--ease-out),
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+}
+.track-pill:hover {
+  background: #ffffff;
+  border-color: rgba(229, 91, 138, 0.45);
+  transform: translateY(-1px);
+}
+.track-pill.is-active {
+  background: linear-gradient(135deg, #fffdf9, #ffe8f2);
+  border-color: var(--rose);
+  color: var(--text);
+  box-shadow: 0 6px 14px -8px rgba(215, 75, 122, 0.38);
+}
+.track-pill-num {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(229, 91, 138, 0.14);
+  color: var(--rose);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+.track-pill.is-active .track-pill-num {
+  background: var(--rose);
+  color: #ffffff;
+}
+.track-pill-name {
+  min-width: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.track-pill-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rose);
+  box-shadow: 0 0 0 3px rgba(229, 91, 138, 0.22);
+}
+
 .player-lyric-strip {
-  margin-top: 1.15rem;
+  margin-top: 0.85rem;
   padding: 14px 16px;
   border-radius: 16px;
   background:
@@ -3069,6 +3137,11 @@ h1, h2, h3, p { margin: 0; }
     font-size: 0.7rem;
     max-width: 92px;
   }
+  .mini-vinyl-switch-btn {
+    width: 21px;
+    height: 21px;
+    font-size: 0.68rem;
+  }
   .mute-btn {
     top: calc(10px + var(--safe-top));
     right: calc(8px + var(--safe-right));
@@ -3087,6 +3160,28 @@ h1, h2, h3, p { margin: 0; }
   place-items: center;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(90, 30, 60, 0.35);
+}
+.mini-vinyl-switch-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(229, 91, 138, 0.28);
+  background: rgba(255, 236, 245, 0.85);
+  color: var(--rose);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex: none;
+  touch-action: manipulation;
+  transition: transform 0.2s var(--ease-out), background 0.2s;
+}
+.mini-vinyl-switch-btn:hover {
+  transform: scale(1.08);
+  background: #ffffff;
 }
 .mini-vinyl-disc {
   width: 13px;

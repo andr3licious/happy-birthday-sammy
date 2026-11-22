@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CONFIG } from '../config';
+import { useMusic } from '../utils/audio';
 import { usePointerTap } from '../utils/haptics';
 
 export function LinerNotesModal({ open, onClose }) {
+  const { trackIndex } = useMusic();
   const [rendered, setRendered] = useState(open);
   const [visible, setVisible] = useState(false);
   const closeBtnRef = useRef(null);
@@ -40,6 +42,9 @@ export function LinerNotesModal({ open, onClose }) {
 
   if (!rendered) return null;
 
+  const currentTrack =
+    (Array.isArray(CONFIG.songs) && CONFIG.songs[trackIndex]) || CONFIG.song;
+
   return (
     <div
       id="linerModal"
@@ -59,12 +64,12 @@ export function LinerNotesModal({ open, onClose }) {
         >
           &times;
         </button>
-        <p className="card-eyebrow">Liner Notes</p>
+        <p className="card-eyebrow">Liner Notes · Track 0{trackIndex + 1}</p>
         <h3 id="linerTitle" className="card-title">
           Why this song? <span className="emoji">🎶</span>
         </h3>
         <p id="linerText" className="liner-text">
-          {CONFIG.song.modalNote || CONFIG.song.linerNotes}
+          {currentTrack.modalNote || currentTrack.linerNotes}
         </p>
       </div>
     </div>

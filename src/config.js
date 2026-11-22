@@ -11,25 +11,46 @@ export const CONFIG = {
   /* INSERT YOUR NAME HERE (used to sign the letter) */
   from: 'Andre',
 
+  songs: [
+    {
+      id: 'happy-birthday-piano',
+      src: 'assets/audio/happy-birthday-piano.m4a',
+      volume: 0.72,
+      title: 'Happy Birthday (Piano)',
+      artist: 'Benote · Piano Instrumental',
+      cover: 'assets/images/IMG_20260901_230952_379.jpg',
+      linerNotes:
+        'A soft piano Happy Birthday to kick off your special day, Sammy. Make a wish and take a breather today! 🎹🎂✨',
+      modalNote:
+        'Thought starting your birthday card with a warm piano Happy Birthday would set the nicest vibe while you blow out your candle. Switch to Track 02 anytime for the throwback energy! 🎹✨',
+      tags: ['🎂 Birthday Piano', '🎹 Warm & Cozy', '💖 Track 01 · For Sam'],
+    },
+    {
+      id: 'baby-remix',
+      src: 'assets/audio/song.mp3',
+      volume: 0.7,
+      title: 'Baby (Remix)',
+      artist: 'Justin Bieber',
+      cover: 'assets/images/IMG_20260901_233255_746.jpg',
+      linerNotes:
+        'Had to put this song on here for you, Sammy. Hope it gets stuck in your head today and makes you smile. Happy birthday! 🎶✨',
+      modalNote:
+        'Fun fact: this throwback still had to stay on here. Play it loud while you celebrate today, future RN — you deserve a super chill, happy birthday! 🎧🩺✨',
+      tags: ['✨ Birthday Vibes', '🎶 Throwback Classic', '💖 Track 02 · For Sam'],
+    },
+  ],
+
   song: {
-    /* INSERT SONG URL HERE: drop an .mp3 into public/assets/audio/ and point to it.
-       If the file is missing or fails to load, a soft built-in music-box
-       lullaby plays instead, so the page never goes silent or breaks. */
-    src: 'assets/audio/song.mp3',
-    volume: 0.7,
-
-    /* INSERT SONG TITLE / ARTIST HERE */
-    title: 'Baby (Remix)',
-    artist: 'Justin Bieber',
-
-    /* Optional album-art for the vinyl label. Leave '' to use the first memory photo. */
-    cover: 'assets/images/IMG_20260901_233255_746.jpg',
-
-    /* INSERT WHY YOU CHOSE THE SONG HERE */
+    /* Primary track alias + fallback lullaby metadata */
+    src: 'assets/audio/happy-birthday-piano.m4a',
+    volume: 0.72,
+    title: 'Happy Birthday (Piano)',
+    artist: 'Benote · Piano Instrumental',
+    cover: 'assets/images/IMG_20260901_230952_379.jpg',
     linerNotes:
-      'Had to put this song on here for you, Sammy. Hope it gets stuck in your head today and makes you smile. Happy birthday! 🎶✨',
+      'A soft piano Happy Birthday to kick off your special day, Sammy. Make a wish and take a breather today! 🎹🎂✨',
     modalNote:
-      'Fun fact: this throwback literally had to be Track 01 on here. Play it loud while you celebrate today, future RN — you deserve a super chill, happy birthday! 🎧🩺✨',
+      'Thought starting your birthday card with a warm piano Happy Birthday would set the nicest vibe while you blow out your candle. Switch to Track 02 anytime for the throwback energy! 🎹✨',
 
     /* Shown on the player only if the song file can't be loaded */
     fallbackTitle: 'Stardust Lullaby',

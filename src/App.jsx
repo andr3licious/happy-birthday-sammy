@@ -36,7 +36,7 @@ export default function App() {
   const [letterDone, setLetterDone] = useState(false);
   const [card3dOpen, setCard3dOpen] = useState(false);
 
-  const { playing, fileFailed } = useMusic();
+  const { playing, fileFailed, trackIndex } = useMusic();
 
   const stardustRef = useRef(null);
   const linerBtnRef = useRef(null);
@@ -188,8 +188,10 @@ export default function App() {
     setBookTilt({ rx: 3, ry: -2 });
   };
 
+  const currentTrack =
+    (Array.isArray(CONFIG.songs) && CONFIG.songs[trackIndex]) || CONFIG.song;
   const coverImg =
-    CONFIG.song.cover || (CONFIG.memories[0] && CONFIG.memories[0].src) || '';
+    currentTrack.cover || (CONFIG.memories[0] && CONFIG.memories[0].src) || '';
   const isDoubleSpread = spread === 2 || spread === 3;
 
   return (
@@ -270,7 +272,7 @@ export default function App() {
                     title="Jump to Music & Snaps page"
                   >
                     <span className="mini-vinyl-title">
-                      {fileFailed ? CONFIG.song.fallbackTitle : CONFIG.song.title}
+                      {fileFailed ? CONFIG.song.fallbackTitle : currentTrack.title}
                     </span>
                     <span className="mini-vinyl-eq" aria-hidden="true">
                       <i />
@@ -278,6 +280,21 @@ export default function App() {
                       <i />
                     </span>
                   </button>
+                  {CONFIG.songs && CONFIG.songs.length > 1 && (
+                    <button
+                      type="button"
+                      id="miniSwitchTrackBtn"
+                      className="mini-vinyl-switch-btn"
+                      onClick={() => {
+                        vibrate(10);
+                        music.nextTrack(true);
+                      }}
+                      aria-label="Switch song"
+                      title="Switch song"
+                    >
+                      ⇄
+                    </button>
+                  )}
                 </div>
               )}
             </nav>

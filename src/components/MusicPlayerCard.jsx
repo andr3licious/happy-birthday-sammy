@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { CONFIG } from '../config';
 import { music, useMusic } from '../utils/audio';
-import { usePointerTap } from '../utils/haptics';
+import { vibrate, usePointerTap } from '../utils/haptics';
 
 function formatTime(sec) {
   if (!Number.isFinite(sec) || sec <= 0) return '0:00';
@@ -11,12 +11,16 @@ function formatTime(sec) {
 }
 
 export function MusicPlayerCard({ linerOpen, onOpenLiner, linerBtnRef }) {
-  const { playing, fileFailed, usingSynth, currentTime, duration } = useMusic();
+  const { playing, fileFailed, usingSynth, currentTime, duration, trackIndex } = useMusic();
   const [dragPct, setDragPct] = useState(null);
   const scrubberRef = useRef(null);
 
+  const tracks =
+    Array.isArray(CONFIG.songs) && CONFIG.songs.length ? CONFIG.songs : [CONFIG.song];
+  const currentTrack = tracks[trackIndex] || tracks[0] || CONFIG.song;
+
   const cover =
-    CONFIG.song.cover || (CONFIG.memories[0] && CONFIG.memories[0].src) || '';
+    currentTrack.cover || (CONFIG.memories[0] && CONFIG.memories[0].src) || '';
   const bgImage = cover
     ? `url("${encodeURI(cover)}"), radial-gradient(circle at 30% 30%, #ffd1e6, #b48cff 60%, #7b5ad8)`
     : undefined;
@@ -105,10 +109,10 @@ export function MusicPlayerCard({ linerOpen, onOpenLiner, linerBtnRef }) {
         </div>
         <div className="track">
           <h4 id="songTitle" className="track-title">
-            {fileFailed ? CONFIG.song.fallbackTitle : CONFIG.song.title}
+            {fileFailed ? CONFIG.song.fallbackTitle : currentTrack.title}
           </h4>
           <p id="songArtist" className="track-artist">
-            {fileFailed ? CONFIG.song.fallbackArtist : CONFIG.song.artist}
+            {fileFailed ? CONFIG.song.fallbackArtist : currentTrack.artist}
           </p>
 
           <div className="track-progress-row">
@@ -199,6 +203,32 @@ export function MusicPlayerCard({ linerOpen, onOpenLiner, linerBtnRef }) {
         </div>
       </div>
 
+      {/* 2-Track Switcher between Happy Birthday (Piano) and Baby (Remix) */}
+      {tracks.length > 1 && (
+        <div className="track-switcher" role="tablist" aria-label="Choose birthday soundtrack">
+          {tracks.map((tr, idx) => {
+            const activeTrack = idx === trackIndex;
+            return (
+              <button
+                key={tr.id || idx}
+                type="button"
+                role="tab"
+                aria-selected={activeTrack}
+                className={`track-pill ${activeTrack ? 'is-active' : ''}`}
+                onClick={() => {
+                  vibrate(10);
+                  music.selectTrack(idx, true);
+                }}
+              >
+                <span className="track-pill-num">0{idx + 1}</span>
+                <span className="track-pill-name">{tr.title}</span>
+                {activeTrack && playing && <span className="track-pill-dot" aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Coquette Scrapbook Soundtrack Note Strip (balances left/right page height) */}
       <div className="player-lyric-strip">
         <div className="lyric-strip-header">
@@ -207,12 +237,15 @@ export function MusicPlayerCard({ linerOpen, onOpenLiner, linerBtnRef }) {
           <span className="lyric-pin" aria-hidden="true">✿</span>
         </div>
         <p className="lyric-strip-quote">
-          &ldquo;{CONFIG.song.linerNotes}&rdquo;
+          &ldquo;{currentTrack.linerNotes}&rdquo;
         </p>
         <div className="lyric-mood-tags" aria-hidden="true">
-          <span>✨ Birthday Vibes</span>
-          <span>🎶 Throwback Classic</span>
-          <span>💖 Track 01 · For {CONFIG.name}</span>
+          {(currentTrack.tags || [
+            '🎂 Birthday Soundtrack',
+            `💖 Track 0${trackIndex + 1} · For ${CONFIG.name}`,
+          ]).map((tag) => (
+            <span key={tag}>{tag}</span>
+          ))}
         </div>
       </div>
     </article>
