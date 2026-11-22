@@ -18,57 +18,71 @@ export function TypewriterLetterCard({ active, done: persistedDone = false, onDo
   const bodyRef = useRef(null);
   const typedRef = useRef(null);
   const caretRef = useRef(null);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
 
-  // Start observing once Stage 3 is active
+  // Start typing immediately when Spread 3 is active (avoids IntersectionObserver stalls inside 3D transforms)
   useEffect(() => {
-    if (!active || started) return;
-    const card = cardRef.current;
-    if (!card) return;
-
-    if (typeof IntersectionObserver !== 'undefined') {
-      const io = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((en) => en.isIntersecting)) {
-            setStarted(true);
-            io.disconnect();
-          }
-        },
-        { threshold: 0.3 }
-      );
-      io.observe(card);
-      return () => io.disconnect();
-    } else {
+    if (active && !started) {
       setStarted(true);
     }
   }, [active, started]);
 
-  // Typewriter loop
+  // Wall-clock requestAnimationFrame typewriter (~4.5–5s total, zero timer drift)
   useEffect(() => {
-    if (!started || done) return;
+    if (!started || done) return undefined;
     if (isReducedMotion()) {
       setTypedCount(chars.length);
       setDone(true);
-      if (onDone) onDone();
-      return;
-    }
-    if (typedCount >= chars.length) {
-      setDone(true);
-      if (onDone) onDone();
-      return;
+      if (onDoneRef.current) onDoneRef.current();
+      return undefined;
     }
 
-    const ch = chars[typedCount - 1] || '';
-    let delay = typedCount === 0 ? 120 : 22 + Math.random() * 34;
-    if ('.!?'.includes(ch)) delay = 280;
-    else if (',;:'.includes(ch)) delay = 140;
-    else if (ch === '\n') delay = 180;
+    let rafId = 0;
+    let idx = 0;
+    let lastTime = performance.now();
+    let budget = 1; // reveal first character immediately on mount
+    let pauseUntil = 0;
 
-    const timer = setTimeout(() => {
-      setTypedCount((c) => c + 1);
-    }, delay);
+    const tick = (now) => {
+      const dt = Math.min(120, Math.max(0, now - lastTime));
+      lastTime = now;
 
-    return () => clearTimeout(timer);
-  }, [started, done, typedCount, chars, onDone]);
+      if (now >= pauseUntil) {
+        budget += dt * 0.16;
+        const prevIdx = idx;
+        while (budget >= 1 && idx < chars.length) {
+          budget -= 1;
+          const ch = chars[idx];
+          idx += 1;
+          if ('.!?'.includes(ch)) {
+            pauseUntil = now + 85;
+            budget = 0;
+            break;
+          } else if (ch === '\n') {
+            pauseUntil = now + 50;
+            budget = 0;
+            break;
+          }
+        }
+        if (idx !== prevIdx) {
+          setTypedCount(idx);
+        }
+      }
+
+      if (idx >= chars.length) {
+        setTypedCount(chars.length);
+        setDone(true);
+        if (onDoneRef.current) onDoneRef.current();
+        return;
+      }
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [started, done, chars]);
 
   // Keep caret in view on desktop scrollable body
   useEffect(() => {
