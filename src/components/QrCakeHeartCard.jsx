@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import QRCode from 'qrcode';
 import { CONFIG } from '../config';
 import { fireConfetti } from '../utils/confetti';
@@ -127,6 +128,7 @@ function drawFrostingDrips(ctx, x, y, w, dripsCount, color) {
 
 export function QrCakeHeartCard({ card3dOpen = false, onToggleCard3d, onModalChange }) {
   const canvasRef = useRef(null);
+  const cornerCanvasRef = useRef(null);
   const [tilt, setTilt] = useState({ rx: 8, ry: -10 });
   const [surpriseOpen, setSurpriseOpen] = useState(false);
 
@@ -376,6 +378,83 @@ export function QrCakeHeartCard({ card3dOpen = false, onToggleCard3d, onModalCha
     renderArtisticQr();
   }, [renderArtisticQr]);
 
+  const renderCornerQr = useCallback(() => {
+    const corner = CONFIG.qr && CONFIG.qr.littleCorner;
+    const canvas = cornerCanvasRef.current;
+    if (!corner || !corner.url || !canvas) return;
+
+    const qr = QRCode.create(corner.url, { errorCorrectionLevel: 'H' });
+    const N = qr.modules.size;
+    const data = qr.modules.data;
+    const isDark = (r, c) => r >= 0 && r < N && c >= 0 && c < N && Boolean(data[r * N + c]);
+    const isFinder = (r, c) =>
+      (r < 7 && c < 7) || (r < 7 && c >= N - 7) || (r >= N - 7 && c < 7);
+
+    const S = 240;
+    const pad = 18;
+    const qrBoxSize = S - pad * 2;
+    const cell = qrBoxSize / N;
+
+    canvas.width = S;
+    canvas.height = S;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.fillStyle = '#FFFDFB';
+    ctx.fillRect(0, 0, S, S);
+
+    const DARK = '#3B172B';
+    const ROSE = '#E55B8A';
+    const centerR = Math.min(N * 0.11, 4.2);
+    const centerC = (N - 1) / 2;
+
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        if (isFinder(r, c)) continue;
+        const dr = r - centerC;
+        const dc = c - centerC;
+        if (Math.sqrt(dr * dr + dc * dc) < centerR) continue;
+        if (isDark(r, c)) {
+          ctx.fillStyle = DARK;
+          drawRoundedRect(
+            ctx,
+            pad + c * cell + cell * 0.08,
+            pad + r * cell + cell * 0.08,
+            cell * 0.84,
+            cell * 0.84,
+            cell * 0.28
+          );
+          ctx.fill();
+        }
+      }
+    }
+
+    drawFinderEye(ctx, pad, pad, cell, DARK, '#5A1838');
+    drawFinderEye(ctx, pad + (N - 7) * cell, pad, cell, DARK, '#4B1D52');
+    drawFinderEye(ctx, pad, pad + (N - 7) * cell, cell, DARK, '#5A1838');
+
+    const badgeX = S / 2;
+    const badgeY = S / 2;
+    const badgeRad = cell * centerR * 0.96;
+
+    ctx.fillStyle = '#FFFDFB';
+    ctx.beginPath();
+    ctx.arc(badgeX, badgeY, badgeRad + 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = ROSE;
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    ctx.font = `700 ${Math.round(badgeRad * 1.15)}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(corner.emoji || '🌸', badgeX, badgeY + 1);
+  }, []);
+
+  useEffect(() => {
+    if (surpriseOpen) renderCornerQr();
+  }, [surpriseOpen, renderCornerQr]);
+
   const handleDownloadQr = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -523,7 +602,7 @@ export function QrCakeHeartCard({ card3dOpen = false, onToggleCard3d, onModalCha
               className="btn-ghost"
               onClick={handleTriggerSurprise}
             >
-              ✨ Open Scan Surprise
+              💌 Secret Note
             </button>
           </div>
         </div>
@@ -556,40 +635,70 @@ export function QrCakeHeartCard({ card3dOpen = false, onToggleCard3d, onModalCha
         </div>
       </div>
 
-      {/* Secret Scan Surprise Modal */}
-      {surpriseOpen && (
-        <div
-          id="qrSurpriseModal"
-          className="modal is-open"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Secret Birthday Surprise"
-        >
+      {/* Secret Note Modal rendered in document.body so 3D book transforms never clip fixed positioning */}
+      {surpriseOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
           <div
-            className="modal-backdrop"
-            onClick={() => setSurpriseOpen(false)}
-          />
-          <div className="modal-card glass qr-surprise-card">
-            <button
-              type="button"
-              className="modal-close"
-              aria-label="Close surprise"
+            id="qrSurpriseModal"
+            className="modal is-open"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Secret Birthday Surprise"
+          >
+            <div
+              className="modal-backdrop"
               onClick={() => setSurpriseOpen(false)}
-            >
-              ×
-            </button>
-            <span className="washi-tape washi-blush" aria-hidden="true" />
-            <p className="card-eyebrow">QR Secret Unlocked 🎂💖</p>
-            <h3 className="card-title">
-              Happy Birthday, {CONFIG.name}! <span className="emoji">🎀</span>
-            </h3>
-            <p className="liner-text">
-              {(CONFIG.qr && CONFIG.qr.secretMessage) || qrPayload}
-            </p>
-            <p className="qr-secret-signoff">- {CONFIG.from} ✨</p>
-          </div>
-        </div>
-      )}
+            />
+            <div className="modal-card glass qr-surprise-card">
+              <button
+                type="button"
+                className="modal-close"
+                aria-label="Close surprise"
+                onClick={() => setSurpriseOpen(false)}
+              >
+                ×
+              </button>
+              <span className="washi-tape washi-blush" aria-hidden="true" />
+              <p className="card-eyebrow">Hidden Note Unlocked 🎂💖</p>
+              <h3 className="card-title">
+                Happy Birthday, {CONFIG.name}! <span className="emoji">🎀</span>
+              </h3>
+              <p className="liner-text">
+                {(CONFIG.qr && CONFIG.qr.secretMessage) || qrPayload}
+              </p>
+              <p className="qr-secret-signoff">- {CONFIG.from} ✨</p>
+
+              {CONFIG.qr && CONFIG.qr.littleCorner && (
+                <div className="secret-corner-box">
+                  <p className="secret-corner-eyebrow">For Tough Days ✨</p>
+                  <h4 className="secret-corner-title">
+                    {CONFIG.qr.littleCorner.emoji} {CONFIG.qr.littleCorner.title}
+                  </h4>
+                  <p className="secret-corner-note">{CONFIG.qr.littleCorner.note}</p>
+                  <div className="secret-corner-qr-wrap">
+                    <canvas
+                      id="cornerQrCanvas"
+                      ref={cornerCanvasRef}
+                      className="secret-corner-qr"
+                      aria-label={`Scannable QR code for ${CONFIG.qr.littleCorner.title}`}
+                    />
+                  </div>
+                  <a
+                    id="cornerLinkBtn"
+                    href={CONFIG.qr.littleCorner.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-glow secret-corner-btn"
+                  >
+                    {CONFIG.qr.littleCorner.emoji} Visit {CONFIG.qr.littleCorner.title} ↗
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
     </article>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CONFIG } from '../config';
 import { music } from '../utils/audio';
 import { vibrate, usePointerTap } from '../utils/haptics';
@@ -177,93 +178,96 @@ export function PolaroidGalleryCard({ flippedMap = {}, onToggleFlip, onModalChan
         Tap a photo to flip it over · Tap 🔍 to view close-up
       </p>
 
-      {/* Close-Up Polaroid Lightbox Modal */}
-      {activeMemory && (
-        <div
-          className="polaroid-lightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Close-up memory: ${activeMemory.caption}`}
-          onClick={handleCloseZoom}
-        >
+      {/* Close-Up Polaroid Lightbox Modal (portaled to document.body above 3D book transforms) */}
+      {activeMemory &&
+        typeof document !== 'undefined' &&
+        createPortal(
           <div
-            className="polaroid-lightbox-card"
-            onClick={(e) => e.stopPropagation()}
+            className="polaroid-lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Close-up memory: ${activeMemory.caption}`}
+            onClick={handleCloseZoom}
           >
-            <div className="lightbox-header">
-              <span className="lightbox-tag">
-                ✿ {activeMemory.date || `Snap 0${zoomIdx + 1}`}
-              </span>
-              <button
-                type="button"
-                className="lightbox-close"
-                onClick={handleCloseZoom}
-                aria-label="Close photo view"
-              >
-                ✕
-              </button>
-            </div>
-
             <div
-              className={`lightbox-polaroid ${zoomFlipped ? 'is-flipped' : ''}`}
-              onClick={() => {
-                vibrate(10);
-                music.pageTurn();
-                setZoomFlipped((p) => !p);
-              }}
+              className="polaroid-lightbox-card"
+              onClick={(e) => e.stopPropagation()}
             >
-              {!zoomFlipped ? (
-                <div className="lightbox-front">
-                  <div className="lightbox-photo-wrap">
-                    <i className="photo-corner pc-tl" aria-hidden="true" />
-                    <i className="photo-corner pc-tr" aria-hidden="true" />
-                    <i className="photo-corner pc-bl" aria-hidden="true" />
-                    <i className="photo-corner pc-br" aria-hidden="true" />
-                    <img src={activeMemory.src} alt={activeMemory.caption} />
-                  </div>
-                  <p className="lightbox-caption">{activeMemory.caption}</p>
-                </div>
-              ) : (
-                <div className="lightbox-back">
-                  <span className="back-stamp">✦ BIRTHDAY ARCHIVE · 2026 ✦</span>
-                  <p className="lightbox-back-text">{activeMemory.back}</p>
-                  <span className="lightbox-back-date">
-                    {activeMemory.date} · For {CONFIG.name} 💖
-                  </span>
-                </div>
-              )}
-            </div>
+              <div className="lightbox-header">
+                <span className="lightbox-tag">
+                  ✿ {activeMemory.date || `Snap 0${zoomIdx + 1}`}
+                </span>
+                <button
+                  type="button"
+                  className="lightbox-close"
+                  onClick={handleCloseZoom}
+                  aria-label="Close photo view"
+                >
+                  ✕
+                </button>
+              </div>
 
-            <div className="lightbox-controls">
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={() => handleStepZoom(-1)}
-              >
-                ← Prev
-              </button>
-              <button
-                type="button"
-                className="btn-ghost"
+              <div
+                className={`lightbox-polaroid ${zoomFlipped ? 'is-flipped' : ''}`}
                 onClick={() => {
                   vibrate(10);
                   music.pageTurn();
                   setZoomFlipped((p) => !p);
                 }}
               >
-                🔄 {zoomFlipped ? 'Show Photo' : 'Read Backside'}
-              </button>
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={() => handleStepZoom(1)}
-              >
-                Next →
-              </button>
+                {!zoomFlipped ? (
+                  <div className="lightbox-front">
+                    <div className="lightbox-photo-wrap">
+                      <i className="photo-corner pc-tl" aria-hidden="true" />
+                      <i className="photo-corner pc-tr" aria-hidden="true" />
+                      <i className="photo-corner pc-bl" aria-hidden="true" />
+                      <i className="photo-corner pc-br" aria-hidden="true" />
+                      <img src={activeMemory.src} alt={activeMemory.caption} />
+                    </div>
+                    <p className="lightbox-caption">{activeMemory.caption}</p>
+                  </div>
+                ) : (
+                  <div className="lightbox-back">
+                    <span className="back-stamp">✦ BIRTHDAY ARCHIVE · 2026 ✦</span>
+                    <p className="lightbox-back-text">{activeMemory.back}</p>
+                    <span className="lightbox-back-date">
+                      {activeMemory.date} · For {CONFIG.name} 💖
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="lightbox-controls">
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => handleStepZoom(-1)}
+                >
+                  ← Prev
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => {
+                    vibrate(10);
+                    music.pageTurn();
+                    setZoomFlipped((p) => !p);
+                  }}
+                >
+                  🔄 {zoomFlipped ? 'Show Photo' : 'Read Backside'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => handleStepZoom(1)}
+                >
+                  Next →
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </article>
   );
 }

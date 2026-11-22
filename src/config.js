@@ -95,5 +95,11 @@ Amping always, Sammy!
     url: 'https://andr3licious.github.io/happy-birthday-sammy/',
     secretMessage:
       'Oych Sammy, you found the hidden note diaych! 🎂💖 Wishing our future RN the happiest birthday and the brightest year ahead. Amping always, Sam!',
+    littleCorner: {
+      title: 'A Little Corner of the Web',
+      emoji: '🌸',
+      url: 'https://andr3licious.github.io/for-sammy/',
+      note: "Whenever you're feeling down, scan this or tap below to visit a little corner I made for you.",
+    },
   },
 };
