@@ -2173,8 +2173,8 @@ h1, h2, h3, p { margin: 0; }
 }
 .secret-corner-qr {
   display: block;
-  width: 134px;
-  height: 134px;
+  width: 148px;
+  height: 148px;
   border-radius: 9px;
 }
 .secret-corner-btn {

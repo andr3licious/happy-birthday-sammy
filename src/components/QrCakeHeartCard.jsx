@@ -128,7 +128,6 @@ function drawFrostingDrips(ctx, x, y, w, dripsCount, color) {
 
 export function QrCakeHeartCard({ card3dOpen = false, onToggleCard3d, onModalChange }) {
   const canvasRef = useRef(null);
-  const cornerCanvasRef = useRef(null);
   const [tilt, setTilt] = useState({ rx: 8, ry: -10 });
   const [surpriseOpen, setSurpriseOpen] = useState(false);
 
@@ -378,83 +377,6 @@ export function QrCakeHeartCard({ card3dOpen = false, onToggleCard3d, onModalCha
     renderArtisticQr();
   }, [renderArtisticQr]);
 
-  const renderCornerQr = useCallback(() => {
-    const corner = CONFIG.qr && CONFIG.qr.littleCorner;
-    const canvas = cornerCanvasRef.current;
-    if (!corner || !corner.url || !canvas) return;
-
-    const qr = QRCode.create(corner.url, { errorCorrectionLevel: 'H' });
-    const N = qr.modules.size;
-    const data = qr.modules.data;
-    const isDark = (r, c) => r >= 0 && r < N && c >= 0 && c < N && Boolean(data[r * N + c]);
-    const isFinder = (r, c) =>
-      (r < 7 && c < 7) || (r < 7 && c >= N - 7) || (r >= N - 7 && c < 7);
-
-    const S = 240;
-    const pad = 18;
-    const qrBoxSize = S - pad * 2;
-    const cell = qrBoxSize / N;
-
-    canvas.width = S;
-    canvas.height = S;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.fillStyle = '#FFFDFB';
-    ctx.fillRect(0, 0, S, S);
-
-    const DARK = '#3B172B';
-    const ROSE = '#E55B8A';
-    const centerR = Math.min(N * 0.11, 4.2);
-    const centerC = (N - 1) / 2;
-
-    for (let r = 0; r < N; r++) {
-      for (let c = 0; c < N; c++) {
-        if (isFinder(r, c)) continue;
-        const dr = r - centerC;
-        const dc = c - centerC;
-        if (Math.sqrt(dr * dr + dc * dc) < centerR) continue;
-        if (isDark(r, c)) {
-          ctx.fillStyle = DARK;
-          drawRoundedRect(
-            ctx,
-            pad + c * cell + cell * 0.08,
-            pad + r * cell + cell * 0.08,
-            cell * 0.84,
-            cell * 0.84,
-            cell * 0.28
-          );
-          ctx.fill();
-        }
-      }
-    }
-
-    drawFinderEye(ctx, pad, pad, cell, DARK, '#5A1838');
-    drawFinderEye(ctx, pad + (N - 7) * cell, pad, cell, DARK, '#4B1D52');
-    drawFinderEye(ctx, pad, pad + (N - 7) * cell, cell, DARK, '#5A1838');
-
-    const badgeX = S / 2;
-    const badgeY = S / 2;
-    const badgeRad = cell * centerR * 0.96;
-
-    ctx.fillStyle = '#FFFDFB';
-    ctx.beginPath();
-    ctx.arc(badgeX, badgeY, badgeRad + 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = ROSE;
-    ctx.lineWidth = 1.8;
-    ctx.stroke();
-
-    ctx.font = `700 ${Math.round(badgeRad * 1.15)}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(corner.emoji || '🌸', badgeX, badgeY + 1);
-  }, []);
-
-  useEffect(() => {
-    if (surpriseOpen) renderCornerQr();
-  }, [surpriseOpen, renderCornerQr]);
-
   const handleDownloadQr = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -677,11 +599,11 @@ export function QrCakeHeartCard({ card3dOpen = false, onToggleCard3d, onModalCha
                   </h4>
                   <p className="secret-corner-note">{CONFIG.qr.littleCorner.note}</p>
                   <div className="secret-corner-qr-wrap">
-                    <canvas
-                      id="cornerQrCanvas"
-                      ref={cornerCanvasRef}
+                    <img
+                      id="cornerQrImg"
+                      src={`${import.meta.env.BASE_URL}${CONFIG.qr.littleCorner.qrImage || 'assets/for-sammy-qr.png'}`}
+                      alt={`Scannable QR code for ${CONFIG.qr.littleCorner.title}`}
                       className="secret-corner-qr"
-                      aria-label={`Scannable QR code for ${CONFIG.qr.littleCorner.title}`}
                     />
                   </div>
                   <a

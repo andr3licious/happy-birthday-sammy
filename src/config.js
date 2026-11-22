@@ -120,6 +120,7 @@ Amping always, Sammy!
       title: 'A Little Corner of the Web',
       emoji: '🌸',
       url: 'https://andr3licious.github.io/for-sammy/',
+      qrImage: 'assets/for-sammy-qr.png',
       note: "Whenever you're feeling down, scan this or tap below to visit a little corner I made for you.",
     },
   },
