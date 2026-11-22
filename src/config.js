@@ -20,7 +20,7 @@ export const CONFIG = {
       artist: 'Benote · Piano Instrumental',
       cover: 'assets/images/IMG_20260901_230952_379.jpg',
       linerNotes:
-        'A soft piano Happy Birthday to kick off your special day, Sammy. Make a wish and take a breather today! 🎹🎂✨',
+        'Happy birthday, Sammy! Just a calm little piano track for your day. Enjoy it, future RN! 🎹🎂✨',
       modalNote:
         'Thought starting your birthday card with a warm piano Happy Birthday would set the nicest vibe while you blow out your candle. Switch to Track 02 anytime for the throwback energy! 🎹✨',
       tags: ['🎂 Birthday Piano', '🎹 Warm & Cozy', '💖 Track 01 · For Sam'],
@@ -48,7 +48,7 @@ export const CONFIG = {
     artist: 'Benote · Piano Instrumental',
     cover: 'assets/images/IMG_20260901_230952_379.jpg',
     linerNotes:
-      'A soft piano Happy Birthday to kick off your special day, Sammy. Make a wish and take a breather today! 🎹🎂✨',
+      'Happy birthday, Sammy! Just a calm little piano track for your day. Enjoy it, future RN! 🎹🎂✨',
     modalNote:
       'Thought starting your birthday card with a warm piano Happy Birthday would set the nicest vibe while you blow out your candle. Switch to Track 02 anytime for the throwback energy! 🎹✨',
 
