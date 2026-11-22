@@ -28,7 +28,7 @@ export function TypewriterLetterCard({ active, done: persistedDone = false, onDo
     }
   }, [active, started]);
 
-  // Wall-clock requestAnimationFrame typewriter (~4.5–5s total, zero timer drift)
+  // Wall-clock requestAnimationFrame typewriter (~12–13s total read-along cadence, zero timer drift)
   useEffect(() => {
     if (!started || done) return undefined;
     if (isReducedMotion()) {
@@ -49,18 +49,22 @@ export function TypewriterLetterCard({ active, done: persistedDone = false, onDo
       lastTime = now;
 
       if (now >= pauseUntil) {
-        budget += dt * 0.16;
+        budget += dt * 0.06;
         const prevIdx = idx;
         while (budget >= 1 && idx < chars.length) {
           budget -= 1;
           const ch = chars[idx];
           idx += 1;
           if ('.!?'.includes(ch)) {
-            pauseUntil = now + 85;
+            pauseUntil = now + 160;
+            budget = 0;
+            break;
+          } else if (',;:'.includes(ch)) {
+            pauseUntil = now + 70;
             budget = 0;
             break;
           } else if (ch === '\n') {
-            pauseUntil = now + 50;
+            pauseUntil = now + 110;
             budget = 0;
             break;
           }
