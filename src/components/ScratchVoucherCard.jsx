@@ -45,14 +45,19 @@ export function ScratchVoucherCard({ active, revealed: persistedRevealed = false
   const brushRef = useRef(22);
   const lastCheckRef = useRef(0);
   const savedTimerRef = useRef(null);
+  const copiedTimerRef = useRef(null);
 
   const [isReady, setIsReady] = useState(persistedRevealed);
   const [revealed, setRevealed] = useState(persistedRevealed);
   const [percent, setPercent] = useState(persistedRevealed ? 100 : 0);
   const [savedMsg, setSavedMsg] = useState(false);
+  const [copiedMsg, setCopiedMsg] = useState(false);
 
   useEffect(() => {
-    return () => clearTimeout(savedTimerRef.current);
+    return () => {
+      clearTimeout(savedTimerRef.current);
+      clearTimeout(copiedTimerRef.current);
+    };
   }, []);
 
   const reveal = useCallback(() => {
@@ -188,6 +193,37 @@ export function ScratchVoucherCard({ active, revealed: persistedRevealed = false
     setSavedMsg(true);
     clearTimeout(savedTimerRef.current);
     savedTimerRef.current = setTimeout(() => setSavedMsg(false), 3000);
+  };
+
+  const handleCopyClaim = () => {
+    const claimText = 'Claiming my birthday treat voucher! 🍨🍰🍟';
+    const markCopied = () => {
+      vibrate(12);
+      music.sparkle();
+      setCopiedMsg(true);
+      clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = setTimeout(() => setCopiedMsg(false), 3000);
+    };
+    const fallbackCopy = () => {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = claimText;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        markCopied();
+      } catch (_) {
+        markCopied();
+      }
+    };
+    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(claimText).then(markCopied).catch(fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
   };
 
   const paintCover = useCallback(() => {
@@ -482,14 +518,24 @@ export function ScratchVoucherCard({ active, revealed: persistedRevealed = false
           )}
         </p>
         {revealed && (
-          <button
-            id="saveVoucherBtn"
-            type="button"
-            className="btn-ghost save-voucher-btn"
-            onClick={handleSaveVoucher}
-          >
-            {savedMsg ? '✓ Voucher Saved!' : '📥 Save Voucher'}
-          </button>
+          <div className="voucher-actions">
+            <button
+              id="saveVoucherBtn"
+              type="button"
+              className="btn-ghost save-voucher-btn"
+              onClick={handleSaveVoucher}
+            >
+              {savedMsg ? '✓ Voucher Saved!' : '📥 Save Voucher'}
+            </button>
+            <button
+              id="claimVoucherBtn"
+              type="button"
+              className="btn-ghost save-voucher-btn"
+              onClick={handleCopyClaim}
+            >
+              {copiedMsg ? '✓ Copied! Send to Andre' : '📋 Copy to Claim'}
+            </button>
+          </div>
         )}
       </div>
     </article>

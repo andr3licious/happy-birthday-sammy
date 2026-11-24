@@ -21,20 +21,65 @@ const SPREADS = [
   { id: 4, label: '💖 QR Card', color: 'berry' },
 ];
 
+const SESSION_KEY = 'hb-sammy-session-v1';
+
+function readSessionState() {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function writeSessionState(state) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(state));
+  } catch (_) {
+    /* ignore */
+  }
+}
+
 export default function App() {
+  const initialSessionRef = useRef(null);
+  if (!initialSessionRef.current) {
+    initialSessionRef.current = readSessionState();
+  }
+  const init = initialSessionRef.current;
+
   // 0 = closed front cover, 1..4 = open spreads inside the 3D birthday card
-  const [spread, setSpread] = useState(0);
+  const [spread, setSpread] = useState(() => {
+    const n = Number(init.spread);
+    return Number.isInteger(n) && n >= 0 && n <= 4 ? n : 0;
+  });
   const [turnDir, setTurnDir] = useState('none'); // 'none' | 'opening' | 'next' | 'prev' | 'closing'
   const [linerOpen, setLinerOpen] = useState(false);
   const [subModalOpen, setSubModalOpen] = useState(false);
   const [bookTilt, setBookTilt] = useState({ rx: 3, ry: -2 });
 
-  // Persisted progress across page turns
-  const [cakeBlown, setCakeBlown] = useState(false);
-  const [flippedSnaps, setFlippedSnaps] = useState({});
-  const [voucherRevealed, setVoucherRevealed] = useState(false);
-  const [letterDone, setLetterDone] = useState(false);
-  const [card3dOpen, setCard3dOpen] = useState(false);
+  // Persisted progress across page turns and mobile tab reloads
+  const [cakeBlown, setCakeBlown] = useState(Boolean(init.cakeBlown));
+  const [flippedSnaps, setFlippedSnaps] = useState(() =>
+    init.flippedSnaps && typeof init.flippedSnaps === 'object' ? init.flippedSnaps : {}
+  );
+  const [voucherRevealed, setVoucherRevealed] = useState(Boolean(init.voucherRevealed));
+  const [letterDone, setLetterDone] = useState(Boolean(init.letterDone));
+  const [card3dOpen, setCard3dOpen] = useState(Boolean(init.card3dOpen));
+
+  useEffect(() => {
+    writeSessionState({
+      spread,
+      cakeBlown,
+      flippedSnaps,
+      voucherRevealed,
+      letterDone,
+      card3dOpen,
+    });
+  }, [spread, cakeBlown, flippedSnaps, voucherRevealed, letterDone, card3dOpen]);
 
   const { playing, fileFailed, trackIndex } = useMusic();
 
