@@ -70,7 +70,7 @@ export const CONFIG = {
     {
       id: 'snap-1',
       src: 'assets/images/IMG_20260901_230952_379.jpg',
-      caption: 'nice shot ✨',
+      caption: 'pretty ✨',
       back: 'Such a nice photo, Sam. Happy birthday! 🌸',
       date: 'snap 01',
       tilt: '-3deg',
@@ -79,7 +79,7 @@ export const CONFIG = {
     {
       id: 'snap-2',
       src: 'assets/images/IMG_20260901_233255_746.jpg',
-      caption: 'golden hour 💛',
+      caption: 'sammy 💛',
       back: 'Golden hour really suits you, Sam ✨',
       date: 'snap 02',
       tilt: '2.5deg',
@@ -88,7 +88,7 @@ export const CONFIG = {
     {
       id: 'snap-3',
       src: 'assets/images/IMG_20260902_003828_384.jpg',
-      caption: 'goofy side 🥸',
+      caption: 'cutie 🥸',
       back: 'HAHAHA',
       date: 'snap 03',
       tilt: '-2.5deg',
