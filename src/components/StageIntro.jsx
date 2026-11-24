@@ -102,7 +102,7 @@ export function StageIntro({ status, onOpen }) {
 
           <p className="card-eyebrow">Birthday Edition · Pop-Up Card</p>
           <h1 className="intro-title">
-            Someone special has a birthday today... <span className="emoji">✨</span>
+            Happy birthday, Sam! <span className="emoji">🎂</span>
           </h1>
           <p className="intro-sub">
             A little pop-up birthday card, made just for you.

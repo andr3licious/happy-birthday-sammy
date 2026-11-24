@@ -35,7 +35,7 @@ export const CONFIG = {
       linerNotes:
         'Had to put this song on here for you, Sammy. Hope it gets stuck in your head today and makes you smile. Happy birthday! 🎶✨',
       modalNote:
-        'Fun fact: this throwback still had to stay on here. Play it loud while you celebrate today, future RN — you deserve a super chill, happy birthday! 🎧🩺✨',
+        "Couldn't take this throwback off here hahaha. Play this if you want something louder today. Happy birthday, Sam! 🎧",
       tags: ['✨ Birthday Vibes', '🎶 Throwback Classic', '💖 Track 02 · For Sam'],
     },
   ],
@@ -70,8 +70,8 @@ export const CONFIG = {
     {
       id: 'snap-1',
       src: 'assets/images/IMG_20260901_230952_379.jpg',
-      caption: 'prettiest ✨',
-      back: 'Pretty kaayo oych 🌸 happy birthday, Sammy!',
+      caption: 'nice shot ✨',
+      back: 'Such a nice photo, Sam. Happy birthday! 🌸',
       date: 'snap 01',
       tilt: '-3deg',
       pin: '#ff7fb5',
