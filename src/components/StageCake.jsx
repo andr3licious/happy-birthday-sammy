@@ -27,12 +27,15 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
   const micRafRef = useRef(0);
   const blowFramesRef = useRef(0);
   const handleBlowOutRef = useRef(null);
+  const mountedRef = useRef(true);
+  const micRequestIdRef = useRef(0);
 
   const micSupported =
     typeof navigator !== 'undefined' &&
     Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 
   const stopMic = useCallback(() => {
+    micRequestIdRef.current += 1;
     if (micRafRef.current) {
       cancelAnimationFrame(micRafRef.current);
       micRafRef.current = 0;
@@ -61,7 +64,9 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
   }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
       stopMic();
       clearTimeout(promptTimerRef.current);
       clearTimeout(continueTimerRef.current);
@@ -102,8 +107,19 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
   const startMic = async () => {
     if (blown || blowingRef.current || !micSupported) return;
     setMicError('');
+    const reqId = ++micRequestIdRef.current;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (!mountedRef.current || blowingRef.current || blown || reqId !== micRequestIdRef.current) {
+        stream.getTracks().forEach((track) => {
+          try {
+            track.stop();
+          } catch (_) {
+            /* ignore */
+          }
+        });
+        return;
+      }
       micStreamRef.current = stream;
 
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -111,6 +127,10 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
       micCtxRef.current = ctx;
       if (ctx.state === 'suspended') {
         await ctx.resume().catch(() => {});
+      }
+      if (!mountedRef.current || blowingRef.current || reqId !== micRequestIdRef.current) {
+        stopMic();
+        return;
       }
 
       const source = ctx.createMediaStreamSource(stream);
@@ -123,7 +143,7 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
       setMicListening(true);
 
       const monitor = () => {
-        if (!micStreamRef.current) return;
+        if (!micStreamRef.current || !mountedRef.current) return;
         analyser.getByteTimeDomainData(data);
         let sum = 0;
         for (let i = 0; i < data.length; i++) {
@@ -151,7 +171,9 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
       micRafRef.current = requestAnimationFrame(monitor);
     } catch (_) {
       stopMic();
-      setMicError('Mic unavailable — just tap the candle 🕯️');
+      if (mountedRef.current) {
+        setMicError('Mic unavailable — just tap the candle 🕯️');
+      }
     }
   };
 

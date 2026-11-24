@@ -1,19 +1,23 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { music } from '../utils/audio';
 import { vibrate } from '../utils/haptics';
 
 export function StageIntro({ status, onOpen }) {
   const btnRef = useRef(null);
+  const openTimerRef = useRef(null);
   const [tilt, setTilt] = useState({ rx: 6, ry: -8 });
   const [untying, setUntying] = useState(false);
+
+  useEffect(() => () => clearTimeout(openTimerRef.current), []);
 
   const handleClick = () => {
     if (untying) return;
     setUntying(true);
     vibrate([15, 30, 15]);
     music.waxPop();
+    music.play();
     const r = btnRef.current ? btnRef.current.getBoundingClientRect() : null;
-    setTimeout(() => {
+    openTimerRef.current = setTimeout(() => {
       onOpen(r);
     }, 240);
   };

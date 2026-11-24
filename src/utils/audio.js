@@ -21,6 +21,7 @@ class MusicEngine {
     this.duration = 0;
     this._lastTimeTick = -1;
     this._switching = false;
+    this._switchTimer = 0;
     this.fadeRaf = 0;
     this._snapshot = this._buildState();
 
@@ -84,6 +85,7 @@ class MusicEngine {
       });
 
       this.el.addEventListener('play', () => {
+        clearTimeout(this._switchTimer);
         this._switching = false;
         if (!this.usingSynth && !this.playing) {
           this.playing = true;
@@ -376,6 +378,7 @@ class MusicEngine {
   }
 
   play() {
+    if (this.playing && !this.usingSynth && this.el && !this.el.paused) return;
     this.unlock();
     this.playing = true;
     if (!this.fileFailed && this.el) {
@@ -407,6 +410,8 @@ class MusicEngine {
   }
 
   pause() {
+    cancelAnimationFrame(this.fadeRaf);
+    this.fadeRaf = 0;
     this.playing = false;
     if (this.usingSynth && this.lullaby) {
       this.lullaby.stop();
@@ -473,6 +478,7 @@ class MusicEngine {
 
     const track = this.getCurrentTrack();
     if (this.el && track && track.src) {
+      clearTimeout(this._switchTimer);
       this._switching = true;
       try {
         this.el.pause();
@@ -481,7 +487,7 @@ class MusicEngine {
       } catch (_) {
         this.fileFailed = true;
       }
-      setTimeout(() => {
+      this._switchTimer = setTimeout(() => {
         this._switching = false;
       }, 60);
     } else {

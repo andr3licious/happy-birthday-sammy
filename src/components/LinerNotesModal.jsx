@@ -8,9 +8,11 @@ export function LinerNotesModal({ open, onClose }) {
   const [rendered, setRendered] = useState(open);
   const [visible, setVisible] = useState(false);
   const closeBtnRef = useRef(null);
+  const wasOpenRef = useRef(open);
 
   useEffect(() => {
     if (open) {
+      wasOpenRef.current = true;
       setRendered(true);
       document.documentElement.style.overflow = 'hidden';
       const raf = requestAnimationFrame(() => {
@@ -20,13 +22,23 @@ export function LinerNotesModal({ open, onClose }) {
         }
       });
       return () => cancelAnimationFrame(raf);
-    } else {
-      setVisible(false);
-      document.documentElement.style.overflow = '';
-      const timer = setTimeout(() => setRendered(false), 350);
-      return () => clearTimeout(timer);
     }
+    if (!wasOpenRef.current) return undefined;
+    wasOpenRef.current = false;
+    setVisible(false);
+    document.documentElement.style.overflow = '';
+    const timer = setTimeout(() => setRendered(false), 350);
+    return () => clearTimeout(timer);
   }, [open]);
+
+  useEffect(
+    () => () => {
+      if (wasOpenRef.current) {
+        document.documentElement.style.overflow = '';
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (!open) return;

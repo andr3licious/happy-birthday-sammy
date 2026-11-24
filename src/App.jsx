@@ -149,7 +149,7 @@ export default function App() {
   const handleOpenCard = useCallback(
     (btnRect) => {
       if (transitioningRef.current) return;
-      music.play();
+      if (!music.playing) music.play();
       if (btnRect && stardustRef.current) {
         stardustRef.current.burst(
           btnRect.left + btnRect.width / 2,
@@ -381,6 +381,7 @@ export default function App() {
                       active={spread === 3}
                       done={letterDone}
                       onDone={() => setLetterDone(true)}
+                      onReplay={() => setLetterDone(false)}
                     />
                   </div>
                 </div>

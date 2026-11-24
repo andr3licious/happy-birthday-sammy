@@ -3,7 +3,7 @@ import { CONFIG } from '../config';
 import { isReducedMotion } from '../utils/confetti';
 import { usePointerTap } from '../utils/haptics';
 
-export function TypewriterLetterCard({ active, done: persistedDone = false, onDone }) {
+export function TypewriterLetterCard({ active, done: persistedDone = false, onDone, onReplay }) {
   const fullText = useMemo(
     () => CONFIG.letter.replace('{from}', CONFIG.from).trim(),
     []
@@ -118,6 +118,7 @@ export function TypewriterLetterCard({ active, done: persistedDone = false, onDo
     setDone(false);
     setTypedCount(0);
     setStarted(true);
+    if (onReplay) onReplay();
   };
 
   const skipTapProps = usePointerTap(handleSkip);
@@ -130,7 +131,6 @@ export function TypewriterLetterCard({ active, done: persistedDone = false, onDo
       ref={cardRef}
       className={`card glass letter-card ${done ? 'is-done' : ''}`}
       style={{ '--i': 3 }}
-      onClick={handleSkip}
       {...skipTapProps}
     >
       <span className="washi-tape washi-blush" aria-hidden="true" />

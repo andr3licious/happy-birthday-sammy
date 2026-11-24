@@ -315,8 +315,17 @@ export function ScratchVoucherCard({ active, revealed: persistedRevealed = false
   }, [active, paintCover]);
 
   const getPos = (e) => {
-    const r = canvasRef.current.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    const r = canvas.getBoundingClientRect();
+    const logicalW = wrap ? wrap.clientWidth : r.width;
+    const logicalH = wrap ? wrap.clientHeight : r.height;
+    const scaleX = r.width ? logicalW / r.width : 1;
+    const scaleY = r.height ? logicalH / r.height : 1;
+    return {
+      x: (e.clientX - r.left) * scaleX,
+      y: (e.clientY - r.top) * scaleY,
+    };
   };
 
   const scratchLine = (a, b) => {
@@ -361,7 +370,7 @@ export function ScratchVoucherCard({ active, revealed: persistedRevealed = false
     if (!force && now - lastCheckRef.current < 120) return;
     lastCheckRef.current = now;
     const pct = measure();
-    const shown = Math.min(100, Math.round((pct / THRESHOLD) * 50));
+    const shown = Math.min(100, Math.round((pct / THRESHOLD) * 100));
     setPercent(shown);
     if (pct >= THRESHOLD) reveal();
   };

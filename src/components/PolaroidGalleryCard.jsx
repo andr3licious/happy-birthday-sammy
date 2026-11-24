@@ -109,10 +109,11 @@ export function PolaroidGalleryCard({ flippedMap = {}, onToggleFlip, onModalChan
     setZoomIdx((zoomIdx + delta + total) % total);
   };
 
+  const isZoomOpen = zoomIdx !== null;
+
   useEffect(() => {
-    const isOpen = zoomIdx !== null;
-    if (onModalChange) onModalChange(isOpen);
-    if (!isOpen) return undefined;
+    if (onModalChange) onModalChange(isZoomOpen);
+    if (!isZoomOpen) return undefined;
 
     document.documentElement.style.overflow = 'hidden';
     const onKeyDown = (e) => {
@@ -147,7 +148,7 @@ export function PolaroidGalleryCard({ flippedMap = {}, onToggleFlip, onModalChan
       document.removeEventListener('keydown', onKeyDown);
       if (onModalChange) onModalChange(false);
     };
-  }, [zoomIdx, onModalChange]);
+  }, [isZoomOpen, onModalChange]);
 
   return (
     <article className="card glass gallery-card" style={{ '--i': 2 }}>
