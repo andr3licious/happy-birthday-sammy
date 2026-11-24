@@ -80,7 +80,7 @@ export const CONFIG = {
       id: 'snap-2',
       src: 'assets/images/IMG_20260901_233255_746.jpg',
       caption: 'sammy 💛',
-      back: 'Golden hour really suits you, Sam ✨',
+      back: 'It really suits you, Sam ✨',
       date: 'snap 02',
       tilt: '2.5deg',
       pin: '#b18cff',
