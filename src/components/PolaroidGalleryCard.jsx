@@ -229,7 +229,7 @@ export function PolaroidGalleryCard({ flippedMap = {}, onToggleFlip, onModalChan
                   </div>
                 ) : (
                   <div className="lightbox-back">
-                    <span className="back-stamp">✦ BIRTHDAY ARCHIVE · 2026 ✦</span>
+                    <span className="back-stamp">✦ BIRTHDAY ARCHIVE · {new Date().getFullYear()} ✦</span>
                     <p className="lightbox-back-text">{activeMemory.back}</p>
                     <span className="lightbox-back-date">
                       {activeMemory.date} · For {CONFIG.name} 💖
