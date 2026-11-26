@@ -35,7 +35,7 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
   const micRequestIdRef = useRef(0);
   const micStartingRef = useRef(false);
   const wasMusicPlayingRef = useRef(false);
-  const micRetryCountRef = useRef(0);
+  const micCleanupRef = useRef(null);
 
   const micSupported =
     typeof navigator !== 'undefined' &&
@@ -50,6 +50,14 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
     if (micRafRef.current) {
       cancelAnimationFrame(micRafRef.current);
       micRafRef.current = 0;
+    }
+    if (micCleanupRef.current) {
+      try {
+        micCleanupRef.current();
+      } catch (_) {
+        /* ignore */
+      }
+      micCleanupRef.current = null;
     }
     try {
       if (micSourceRef.current) micSourceRef.current.disconnect();
@@ -152,11 +160,10 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
     micStartingRef.current = true;
     setMicStarting(true);
     setMicError('');
-    micRetryCountRef.current = 0;
     const reqId = ++micRequestIdRef.current;
 
     // Pause background audio and unlock AudioContext synchronously during the tap gesture
-    // before awaiting OS microphone permissions (prevents Android/iOS first-try silent streams).
+    // before awaiting OS microphone permissions.
     wasMusicPlayingRef.current = music.playing;
     if (music.playing) {
       music.pause();
@@ -183,9 +190,9 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
         try {
           return await navigator.mediaDevices.getUserMedia({
             audio: {
-              echoCancellation: false,
-              noiseSuppression: false,
-              autoGainControl: false,
+              echoCancellation: { ideal: false },
+              noiseSuppression: { ideal: false },
+              autoGainControl: { ideal: false },
             },
           });
         } catch (err) {
@@ -203,60 +210,82 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
         }
       };
 
-      const connectStream = async (stream) => {
-        if (!mountedRef.current || blowingRef.current || blown || reqId !== micRequestIdRef.current) {
-          stream.getTracks().forEach((track) => {
-            try {
-              track.stop();
-            } catch (_) {
-              /* ignore */
-            }
-          });
-          return false;
-        }
-        micStreamRef.current = stream;
-
-        if (ctx.state !== 'running') {
-          await ctx.resume().catch(() => {});
-        }
-        if (!mountedRef.current || blowingRef.current || blown || reqId !== micRequestIdRef.current) {
-          return false;
-        }
-
-        const source = ctx.createMediaStreamSource(stream);
-        const analyser = ctx.createAnalyser();
-        analyser.fftSize = 1024;
-        analyser.smoothingTimeConstant = 0.25;
-        const silentGain = ctx.createGain();
-        silentGain.gain.value = 0;
-
-        // Routing through a zero-gain node to destination keeps Chromium/Safari audio pull active.
-        source.connect(analyser);
-        analyser.connect(silentGain);
-        silentGain.connect(ctx.destination);
-
-        micSourceRef.current = source;
-        micAnalyserRef.current = analyser;
-        micSilentGainRef.current = silentGain;
-        return true;
-      };
-
       const stream = await acquireStream();
-      const connected = await connectStream(stream);
-      if (!connected) {
+      if (!mountedRef.current || blowingRef.current || blown || reqId !== micRequestIdRef.current) {
+        stream.getTracks().forEach((track) => {
+          try {
+            track.stop();
+          } catch (_) {
+            /* ignore */
+          }
+        });
+        stopMic({ restoreMusic: true });
+        return;
+      }
+      micStreamRef.current = stream;
+
+      if (ctx.state !== 'running') {
+        await ctx.resume().catch(() => {});
+      }
+      if (!mountedRef.current || blowingRef.current || blown || reqId !== micRequestIdRef.current) {
         stopMic({ restoreMusic: true });
         return;
       }
 
-      let activeAnalyser = micAnalyserRef.current;
-      let floatBuf = new Float32Array(activeAnalyser.fftSize);
-      let byteBuf = new Uint8Array(activeAnalyser.fftSize);
-      let sawSignal = false;
-      let startedAt = performance.now();
+      const resumeCtx = () => {
+        if (ctx && ctx.state === 'suspended' && reqId === micRequestIdRef.current) {
+          ctx.resume().catch(() => {});
+        }
+      };
+      const onVisibilityResume = () => {
+        if (typeof document !== 'undefined' && !document.hidden) resumeCtx();
+      };
+      window.addEventListener('focus', resumeCtx);
+      window.addEventListener('pointerdown', resumeCtx, { passive: true });
+      document.addEventListener('visibilitychange', onVisibilityResume);
+      const tracks = stream.getAudioTracks ? stream.getAudioTracks() : stream.getTracks();
+      tracks.forEach((t) => {
+        try {
+          t.onunmute = resumeCtx;
+        } catch (_) {
+          /* ignore */
+        }
+      });
+      micCleanupRef.current = () => {
+        window.removeEventListener('focus', resumeCtx);
+        window.removeEventListener('pointerdown', resumeCtx);
+        document.removeEventListener('visibilitychange', onVisibilityResume);
+        tracks.forEach((t) => {
+          try {
+            t.onunmute = null;
+          } catch (_) {
+            /* ignore */
+          }
+        });
+      };
+
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.3;
+      const silentGain = ctx.createGain();
+      silentGain.gain.value = 0;
+
+      // Routing through a zero-gain node to destination keeps Chromium/Safari audio pull active.
+      source.connect(analyser);
+      analyser.connect(silentGain);
+      silentGain.connect(ctx.destination);
+
+      micSourceRef.current = source;
+      micAnalyserRef.current = analyser;
+      micSilentGainRef.current = silentGain;
+
+      const floatBuf = new Float32Array(analyser.fftSize);
+      const byteBuf = new Uint8Array(analyser.fftSize);
+      const freqBuf = new Uint8Array(analyser.frequencyBinCount);
       let lastResumeAttempt = 0;
       let ambientRms = 0;
       let ambientFrames = 0;
-      let recovering = false;
 
       blowFramesRef.current = 0;
       micStartingRef.current = false;
@@ -264,11 +293,7 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
       setMicListening(true);
 
       const monitor = () => {
-        if ((!micStreamRef.current && !recovering) || !mountedRef.current || reqId !== micRequestIdRef.current) return;
-        if (recovering) {
-          micRafRef.current = requestAnimationFrame(monitor);
-          return;
-        }
+        if (!micStreamRef.current || !mountedRef.current || reqId !== micRequestIdRef.current) return;
 
         const now = performance.now();
         if (ctx.state === 'suspended' && now - lastResumeAttempt > 250) {
@@ -276,102 +301,50 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
           ctx.resume().catch(() => {});
         }
 
-        const curAnalyser = micAnalyserRef.current;
-        if (!curAnalyser) return;
-        if (curAnalyser !== activeAnalyser) {
-          activeAnalyser = curAnalyser;
-          floatBuf = new Float32Array(activeAnalyser.fftSize);
-          byteBuf = new Uint8Array(activeAnalyser.fftSize);
-        }
-
         let meanSq = 0;
-        let peak = 0;
-        if (typeof activeAnalyser.getFloatTimeDomainData === 'function') {
-          activeAnalyser.getFloatTimeDomainData(floatBuf);
+        if (typeof analyser.getFloatTimeDomainData === 'function') {
+          analyser.getFloatTimeDomainData(floatBuf);
           for (let i = 0; i < floatBuf.length; i++) {
             const v = floatBuf[i];
-            const a = Math.abs(v);
-            if (a > peak) peak = a;
             meanSq += v * v;
           }
           meanSq /= floatBuf.length;
         } else {
-          activeAnalyser.getByteTimeDomainData(byteBuf);
+          analyser.getByteTimeDomainData(byteBuf);
           for (let i = 0; i < byteBuf.length; i++) {
             const v = (byteBuf[i] - 128) / 128;
-            const a = Math.abs(v);
-            if (a > peak) peak = a;
             meanSq += v * v;
           }
           meanSq /= byteBuf.length;
         }
         const rms = Math.sqrt(meanSq);
 
-        if (peak > 0.0003) {
-          sawSignal = true;
-        } else if (!sawSignal && now - startedAt > 900 && micRetryCountRef.current < 1) {
-          // Some mobile browsers yield an all-zero buffer on the very first permission grant;
-          // re-acquiring once now that permission is granted recovers without a page reload.
-          micRetryCountRef.current += 1;
-          recovering = true;
-          try {
-            if (micSourceRef.current) micSourceRef.current.disconnect();
-            if (micAnalyserRef.current) micAnalyserRef.current.disconnect();
-            if (micSilentGainRef.current) micSilentGainRef.current.disconnect();
-          } catch (_) {
-            /* ignore */
+        let lowFreqAvg = 0;
+        if (typeof analyser.getByteFrequencyData === 'function') {
+          analyser.getByteFrequencyData(freqBuf);
+          const bins = Math.min(32, freqBuf.length);
+          let binSum = 0;
+          for (let i = 0; i < bins; i++) {
+            binSum += freqBuf[i];
           }
-          micSourceRef.current = null;
-          micAnalyserRef.current = null;
-          micSilentGainRef.current = null;
-          if (micStreamRef.current) {
-            micStreamRef.current.getTracks().forEach((track) => {
-              try {
-                track.stop();
-              } catch (_) {
-                /* ignore */
-              }
-            });
-            micStreamRef.current = null;
-          }
-          acquireStream()
-            .then((freshStream) => connectStream(freshStream))
-            .then((ok) => {
-              if (!ok || reqId !== micRequestIdRef.current) {
-                stopMic({ restoreMusic: true });
-                return;
-              }
-              startedAt = performance.now();
-              ambientFrames = 0;
-              ambientRms = 0;
-              recovering = false;
-            })
-            .catch(() => {
-              recovering = false;
-              const isCurrent = mountedRef.current && reqId === micRequestIdRef.current;
-              stopMic({ restoreMusic: true });
-              if (isCurrent) {
-                setMicError('Mic unavailable — just tap the candle 🕯️');
-              }
-            });
-          micRafRef.current = requestAnimationFrame(monitor);
-          return;
+          lowFreqAvg = bins ? binSum / (bins * 255) : 0;
         }
 
-        setMicLevel(Math.min(1, rms * 7.5));
+        const energy = Math.max(rms, lowFreqAvg * 0.45);
+        setMicLevel(Math.min(1, energy * 7));
 
-        if (ambientFrames < 12) {
+        if (energy > 0.0005 && ambientFrames < 12) {
           ambientFrames += 1;
-          ambientRms = ambientFrames === 1 ? rms : ambientRms * 0.8 + rms * 0.2;
+          ambientRms = ambientFrames === 1 ? energy : ambientRms * 0.8 + energy * 0.2;
         }
-        const threshold = Math.max(0.085, ambientRms * 2.5 + 0.035);
-        if (rms > threshold || rms > 0.12) {
+        const threshold = Math.max(0.065, ambientRms * 2.2 + 0.025);
+        if (energy > threshold || energy > 0.1) {
           blowFramesRef.current += 1;
         } else {
           blowFramesRef.current = Math.max(0, blowFramesRef.current - 1);
         }
 
-        if (blowFramesRef.current >= 8) {
+        if (blowFramesRef.current >= 6) {
           stopMic({ restoreMusic: true });
           if (handleBlowOutRef.current) handleBlowOutRef.current();
           return;
@@ -381,11 +354,16 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
       };
 
       micRafRef.current = requestAnimationFrame(monitor);
-    } catch (_) {
+    } catch (err) {
       const isCurrent = mountedRef.current && reqId === micRequestIdRef.current;
       stopMic({ restoreMusic: true });
       if (isCurrent) {
-        setMicError('Mic unavailable — just tap the candle 🕯️');
+        const errName = err && err.name;
+        if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
+          setMicError('Mic permission blocked — allow mic in site settings or tap the candle 🕯️');
+        } else {
+          setMicError('Mic unavailable — just tap the candle 🕯️');
+        }
       }
     }
   };
