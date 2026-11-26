@@ -15,10 +15,10 @@ import { QrCakeHeartCard } from './components/QrCakeHeartCard';
 import { LinerNotesModal } from './components/LinerNotesModal';
 
 const SPREADS = [
-  { id: 1, label: '🎂 Cake', color: 'rose' },
-  { id: 2, label: '🎵 Music & Snaps', color: 'lilac' },
-  { id: 3, label: '💌 Gift & Letter', color: 'gold' },
-  { id: 4, label: '💖 QR Card', color: 'berry' },
+  { id: 1, label: '🎂 Cake', short: '🎂 Cake', color: 'rose' },
+  { id: 2, label: '🎵 Music & Snaps', short: '🎵 Music', color: 'lilac' },
+  { id: 3, label: '💌 Gift & Letter', short: '💌 Letter', color: 'gold' },
+  { id: 4, label: '💖 QR Card', short: '💖 QR', color: 'berry' },
 ];
 
 const SESSION_KEY = 'hb-sammy-session-v1';
@@ -82,6 +82,24 @@ export default function App() {
   }, [spread, cakeBlown, flippedSnaps, voucherRevealed, letterDone, card3dOpen]);
 
   const { playing, fileFailed, trackIndex } = useMusic();
+
+  // Warm the browser cache with the photos (polaroids + vinyl covers) while
+  // she's on the cover / cake page, so they're already there on page 2.
+  useEffect(() => {
+    const srcs = new Set([
+      ...CONFIG.memories.map((m) => m.src),
+      ...(CONFIG.songs || []).map((t) => t.cover),
+    ]);
+    const imgs = [];
+    srcs.forEach((src) => {
+      if (!src) return;
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = src;
+      imgs.push(img);
+    });
+    return () => imgs.splice(0);
+  }, []);
 
   const stardustRef = useRef(null);
   const linerBtnRef = useRef(null);
@@ -275,8 +293,15 @@ export default function App() {
                     spread === s.id ? 'is-current' : ''
                   }`}
                   onClick={() => goToSpread(s.id)}
+                  aria-current={spread === s.id ? 'page' : undefined}
+                  aria-label={s.label.replace(/^\S+\s/, '')}
                 >
-                  <span className="bookmark-stitch">{s.label}</span>
+                  <span className="bookmark-stitch">
+                    <span className="bookmark-label-full">{s.label}</span>
+                    <span className="bookmark-label-short" aria-hidden="true">
+                      {s.short}
+                    </span>
+                  </span>
                 </button>
               ))}
               <button
@@ -285,7 +310,12 @@ export default function App() {
                 onClick={() => goToSpread(0, 'closing')}
                 aria-label="Close birthday card"
               >
-                <span className="bookmark-stitch">📕 Close Card</span>
+                <span className="bookmark-stitch">
+                  <span className="bookmark-label-full">📕 Close Card</span>
+                  <span className="bookmark-label-short" aria-hidden="true">
+                    📕<span className="bookmark-close-word"> Close</span>
+                  </span>
+                </span>
               </button>
 
               {spread !== 2 && (

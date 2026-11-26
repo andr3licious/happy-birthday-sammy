@@ -3610,3 +3610,32 @@ h1, h2, h3, p { margin: 0; }
   .flame { animation: none !important; }
   .card { opacity: 1; transform: none; }
 }
+
+/* =====================================================================
+   Polish pass
+   ===================================================================== */
+
+/* Mobile: short tab labels so all five tabs fit on a single row and the
+   card starts higher on small screens. */
+.bookmark-label-short { display: none; }
+@media (max-width: 600px) {
+  .bookmark-label-full { display: none; }
+  .bookmark-label-short { display: inline; }
+  .book-bookmarks .bookmark-tab { white-space: nowrap; }
+}
+@media (max-width: 600px) {
+  .book-bookmarks { gap: 4px; }
+  .book-bookmarks .bookmark-tab { padding-inline: 0.55em; font-size: 0.7rem; }
+}
+@media (max-width: 370px) {
+  .book-bookmarks .bookmark-tab { padding-inline: 0.45em; font-size: 0.66rem; }
+  .bookmark-close-word { display: none; }
+}
+
+/* Desktop spread: a bigger record fills the left page instead of leaving
+   blank bands around a small player. */
+@media (min-width: 960px) {
+  .book-page .player-card .turntable {
+    width: clamp(150px, 15vw, 210px);
+  }
+}
