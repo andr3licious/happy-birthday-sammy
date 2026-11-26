@@ -1660,6 +1660,11 @@ h1, h2, h3, p { margin: 0; }
   user-select: none;
   padding: 16px 10px;
 }
+@media (max-width: 480px) {
+  .gift-card-3d-stage {
+    padding: 14px 4px;
+  }
+}
 .gift-card-3d-pivot {
   position: relative;
   width: min(100%, 340px);
@@ -1754,6 +1759,7 @@ h1, h2, h3, p { margin: 0; }
 
 .gift-card-back-title {
   margin-top: 18px;
+  padding: 0 28px;
   font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1.25rem;
@@ -1784,7 +1790,7 @@ h1, h2, h3, p { margin: 0; }
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding-bottom: 10px;
+  padding: 0 12px 10px;
   transform-style: preserve-3d;
 }
 .floor-crease {
@@ -1795,11 +1801,15 @@ h1, h2, h3, p { margin: 0; }
   border-top: 1.5px dashed rgba(215, 130, 165, 0.5);
 }
 .floor-caption {
-  font-size: 0.68rem;
+  font-size: clamp(0.54rem, 2.3vw, 0.68rem);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
+  line-height: 1.3;
   text-transform: uppercase;
+  text-align: center;
+  text-wrap: balance;
   color: var(--muted);
+  max-width: 100%;
 }
 
 /* 3D Pop-Up Multi-Tier Cake inside the Gift Card */

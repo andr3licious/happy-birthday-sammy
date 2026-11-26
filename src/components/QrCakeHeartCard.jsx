@@ -500,8 +500,8 @@ export function QrCakeHeartCard({ card3dOpen = false, onToggleCard3d, onModalCha
 
                 <p className="floor-caption">
                   {card3dOpen
-                    ? '✦ Pop-Up Birthday Edition · Tap to Close ✦'
-                    : '✦ Tap to Open Your Birthday Card ✦'}
+                    ? '✦ Pop-Up Edition · Tap to Close ✦'
+                    : '✦ Tap to Open Your Card ✦'}
                 </p>
               </div>
             </div>
