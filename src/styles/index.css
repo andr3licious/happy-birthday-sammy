@@ -3639,3 +3639,26 @@ h1, h2, h3, p { margin: 0; }
     width: clamp(150px, 15vw, 210px);
   }
 }
+
+/* Page 4 pop-up card: line the upright back panel up with the cake floor so
+   the open card reads as one folded card (was offset in depth and width,
+   which looked broken on phones), and keep the caption on one line. */
+.gift-card-3d-stage:not(.is-closed) .gift-card-back {
+  inset: 0 10px 96px;
+  transform: translateZ(-6px);
+}
+.gift-card-floor {
+  left: 10px;
+  right: 10px;
+}
+.floor-caption {
+  white-space: nowrap;
+  letter-spacing: 0.06em;
+  padding-inline: 8px;
+}
+@media (max-width: 600px) {
+  .gift-card-3d-stage {
+    min-height: 0;
+    padding: 4px 0;
+  }
+}

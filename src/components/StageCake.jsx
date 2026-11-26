@@ -16,6 +16,7 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
   const [micListening, setMicListening] = useState(false);
   const [micLevel, setMicLevel] = useState(0);
   const [micError, setMicError] = useState('');
+  const [micPending, setMicPending] = useState(false);
 
   const candleBtnRef = useRef(null);
   const continueBtnRef = useRef(null);
@@ -52,13 +53,15 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
     }
     if (micCtxRef.current) {
       try {
-        micCtxRef.current.close();
+        const closing = micCtxRef.current.close();
+        if (closing && closing.catch) closing.catch(() => {});
       } catch (_) {
         /* ignore */
       }
       micCtxRef.current = null;
     }
     blowFramesRef.current = 0;
+    setMicPending(false);
     setMicListening(false);
     setMicLevel(0);
   }, []);
@@ -105,11 +108,53 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
   handleBlowOutRef.current = handleBlowOut;
 
   const startMic = async () => {
-    if (blown || blowingRef.current || !micSupported) return;
+    if (blown || blowingRef.current || !micSupported || micPending) return;
     setMicError('');
+    setMicPending(true);
     const reqId = ++micRequestIdRef.current;
+
+    // Create + resume the AudioContext synchronously inside the tap. If we
+    // wait until after getUserMedia, the first-time permission prompt eats
+    // the user gesture and mobile browsers leave the context suspended, so
+    // the analyser only ever hears silence (it "works after a reload" because
+    // the permission is remembered and no prompt interrupts the gesture).
+    let ctx = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const AC = window.AudioContext || window.webkitAudioContext;
+      ctx = new AC();
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    } catch (_) {
+      ctx = null;
+    }
+    micCtxRef.current = ctx;
+
+    const closeCtx = () => {
+      if (!ctx) return;
+      try {
+        const closing = ctx.close();
+        if (closing && closing.catch) closing.catch(() => {});
+      } catch (_) {
+        /* ignore */
+      }
+      if (micCtxRef.current === ctx) micCtxRef.current = null;
+    };
+
+    try {
+      if (!ctx) throw new Error('AudioContext unavailable');
+      let stream;
+      try {
+        // Phone noise suppression treats blowing as noise and filters it out.
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+          },
+        });
+      } catch (err) {
+        if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) throw err;
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
       if (!mountedRef.current || blowingRef.current || blown || reqId !== micRequestIdRef.current) {
         stream.getTracks().forEach((track) => {
           try {
@@ -118,15 +163,24 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
             /* ignore */
           }
         });
+        closeCtx();
+        if (reqId === micRequestIdRef.current) setMicPending(false);
         return;
       }
       micStreamRef.current = stream;
 
-      const AC = window.AudioContext || window.webkitAudioContext;
-      const ctx = new AC();
-      micCtxRef.current = ctx;
-      if (ctx.state === 'suspended') {
+      if (ctx.state !== 'running') {
         await ctx.resume().catch(() => {});
+      }
+      if (ctx.state !== 'running') {
+        // Still blocked: the next tap anywhere on the page will start it.
+        const kick = () => {
+          if (micCtxRef.current === ctx && ctx.state !== 'closed') {
+            ctx.resume().catch(() => {});
+          }
+        };
+        document.addEventListener('pointerdown', kick, { once: true, capture: true });
+        document.addEventListener('touchend', kick, { once: true, capture: true });
       }
       if (!mountedRef.current || blowingRef.current || reqId !== micRequestIdRef.current) {
         stopMic();
@@ -140,6 +194,7 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
 
       const data = new Uint8Array(analyser.fftSize);
       blowFramesRef.current = 0;
+      setMicPending(false);
       setMicListening(true);
 
       const monitor = () => {
@@ -170,6 +225,11 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
 
       micRafRef.current = requestAnimationFrame(monitor);
     } catch (_) {
+      if (reqId !== micRequestIdRef.current) {
+        // Cancelled (or superseded) while the permission prompt was open.
+        closeCtx();
+        return;
+      }
       stopMic();
       if (mountedRef.current) {
         setMicError('Mic unavailable — just tap the candle 🕯️');
@@ -317,8 +377,10 @@ export function StageCake({ status, blown = false, onBlowOut, onRelight, onConti
                 type="button"
                 className="btn-ghost mic-blow-btn"
                 onClick={startMic}
+                disabled={micPending}
+                aria-busy={micPending || undefined}
               >
-                🎤 Or blow using your mic
+                {micPending ? '🎤 Allow mic access…' : '🎤 Or blow using your mic'}
               </button>
             ) : (
               <div className="mic-listening-pill" role="status" aria-live="polite">
